@@ -35,9 +35,11 @@ done
 # Wi-Fi: signal levels, disconnected, off.
 wifi() { "$BIN" symbol --symbol "$1" ${2:+--value "$2"} --point-size 18 --scale 2 \
   --min-width 26 --x-shift 0.75 --color 0xffffffff --out "$OUT/wifi/$3.png"; }
+# The wifi glyph has 3 arc levels; values must land in distinct variableValue
+# bands (0.2 / 0.5 / 1.0) or adjacent levels render identically.
 wifi wifi 1.0 full
-wifi wifi 0.66 high
-wifi wifi 0.34 low
+wifi wifi 0.5 medium
+wifi wifi 0.2 low
 wifi wifi.exclamationmark "" disconnected
 wifi wifi.slash "" off
 

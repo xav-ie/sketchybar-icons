@@ -26,18 +26,17 @@ const MIN_WIDTH = 26
 # padding, so the fan sits centred in its button (measured 12/11 retina px).
 const X_SHIFT = 0.75
 
-# Quantize the 0..1 signal fraction to the wifi glyph's arc levels. Kept coarse
-# so the cache filename (and thus the rendered PNG) is stable across small RSSI
-# jitter. Connected always shows at least the dot + first arc.
+# Quantize the 0..1 signal fraction to the wifi glyph's THREE distinct arc
+# levels. The `wifi` symbol only has 3 arcs, and its variableValue bands are
+# ~[0,0.33)=1 arc, [0.33,0.66)=2 arcs, [0.66,1]=3 arcs — so values must land
+# clearly inside a band (0.2 / 0.5 / 1.0), else adjacent levels render alike.
 def signal-value [fraction: float] {
-  if $fraction >= 0.75 {
+  if $fraction >= 0.66 {
     1.0
-  } else if $fraction >= 0.5 {
-    0.75
-  } else if $fraction >= 0.25 {
+  } else if $fraction >= 0.33 {
     0.5
   } else {
-    0.34
+    0.2
   }
 }
 
