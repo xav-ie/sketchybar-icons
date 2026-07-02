@@ -4,6 +4,23 @@ Render **native macOS Battery / Wi-Fi icons** (and any SF Symbol) to PNG files f
 [SketchyBar](https://github.com/FelixKratz/SketchyBar) — **without** the
 `alias` feature, so your bar no longer needs Screen Recording permission.
 
+## Gallery
+
+Battery discharging — continuous fill, red when low, warning triangle when critical:
+
+![battery discharging](assets/battery-discharging.png)
+
+Battery charging — real level underneath a bolt with a knocked-out halo:
+
+![battery charging](assets/battery-charging.png)
+
+Wi-Fi — arcs fill by live RSSI, plus disconnected and off:
+
+![wifi](assets/wifi.png)
+
+> Prefer not to build anything? Grab a ready-made PNG set from the
+> [latest release](https://github.com/xav-ie/sketchybar-icons/releases/latest).
+
 ## Why
 
 SketchyBar's `alias` items (`"Control Center,Battery"`, `"Control Center,WiFi"`)

@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Build (nix)
+        run: nix build -L
+      - name: Smoke test
+        run: |
+          ./result/bin/sketchybar-icons battery --level 0.5 --charging true --out /tmp/b.png
+          ./result/bin/sketchybar-icons battery --level 0.03 --warn true --out /tmp/w.png
+          ./result/bin/sketchybar-icons symbol --symbol wifi --value 0.6 --out /tmp/wifi.png
+          ./result/bin/sketchybar-icons wifi || true   # runners may have no Wi-Fi
+          test -s /tmp/b.png && test -s /tmp/w.png && test -s /tmp/wifi.png
+      - name: Flake check
+        run: nix flake check -L

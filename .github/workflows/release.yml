@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      # Build with the system Swift toolchain so the binary is portable (links
+      # only the macOS system Swift runtime + frameworks — no Nix store paths).
+      - name: Build portable binary
+        run: swiftc -O *.swift -o sketchybar-icons
+      - name: Package binary
+        run: tar -czf sketchybar-icons-macos-arm64.tar.gz sketchybar-icons
+      - name: Render icon pack
+        run: |
+          bash scripts/render-icon-pack.sh ./sketchybar-icons icons
+          zip -r sketchybar-icons-pack.zip icons
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            sketchybar-icons-macos-arm64.tar.gz
+            sketchybar-icons-pack.zip
+          generate_release_notes: true
