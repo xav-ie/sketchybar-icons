@@ -1,0 +1,43 @@
+name: Gallery
+
+# CI is the single canonical renderer for the README gallery. SF Symbol glyphs
+# differ across macOS versions, so a byte-for-byte "fail if stale" gate that
+# compared a contributor's local render against the runner would false-positive.
+# Instead, whenever the rendering code changes, the runner regenerates the
+# gallery and commits it back — so assets/ always match one canonical renderer.
+#
+# No loop: this only triggers on the Swift/script paths below, and the commit it
+# makes touches assets/ (not in `paths`), so the pushed commit doesn't re-trigger.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.swift"
+      - "scripts/render-gallery.sh"
+      - ".github/workflows/gallery.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  gallery:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Build (nix)
+        run: nix build -L
+      - name: Render gallery
+        run: nix shell nixpkgs#imagemagick -c bash scripts/render-gallery.sh ./result/bin/sketchybar-icons
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- assets; then
+            echo "Gallery unchanged."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets
+          git commit -m "docs: regenerate gallery [skip ci]"
+          git push

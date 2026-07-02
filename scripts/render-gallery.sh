@@ -23,7 +23,9 @@ lvl() { awk "BEGIN { printf \"%.2f\", $1 / 100 }"; }
 # native rendered size (no upscaling — keep sizes bar-accurate & relative).
 tile() { magick -size 108x60 xc:"$PAGE" -fill "$INNER" -draw "roundrectangle 6,4,101,55,9,9" \
   "$1" -gravity center -composite "$2"; }
-row() { local out=$1; shift; magick "$@" +append "$out"; }
+# -strip drops PNG metadata (timestamps etc.) so output is byte-deterministic
+# for a given OS + ImageMagick — lets CI regenerate and detect real changes.
+row() { local out=$1; shift; magick "$@" +append -strip "$out"; }
 
 # Battery rows: discharging / charging / low-power, 100→0 every 10%.
 battrow() { # $1=outfile  $2=charging(true|false)  $3=lowpower-fill-colour("" if none)
