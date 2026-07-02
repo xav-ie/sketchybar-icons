@@ -101,9 +101,7 @@ func drawBattery(
     guard let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil) else { return }
     let cfgS = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
     let h = interiorH * heightFrac
-    // Halo width. Kept generous so it stays visible at small bar sizes (a thin
-    // gap disappears once the icon is scaled down).
-    let gap = interiorH * 0.26
+    let gap = interiorH * 0.16
     func rect(_ img: NSImage, _ dx: CGFloat = 0, _ dy: CGFloat = 0) -> NSRect {
       let w = h * (img.size.width / max(1, img.size.height))
       return NSRect(x: interiorCenterX - w / 2 + dx, y: interiorCenterY - h / 2 + dy, width: w, height: h)
@@ -133,11 +131,6 @@ func drawBattery(
   } else if warn {
     overlay("exclamationmark.triangle.fill", heightFrac: 1.35, tint: fillColor)
   }
-
-  // Redraw the outline on top so it always keeps its colour (white) even where
-  // an overlay glyph crosses it — the outline stays clean, the glyph reads as
-  // tucked behind it.
-  outline.draw(in: NSRect(origin: .zero, size: size), from: .zero, operation: .sourceOver, fraction: 1.0)
 
   NSGraphicsContext.restoreGraphicsState()
 
