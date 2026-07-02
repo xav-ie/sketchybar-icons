@@ -13,6 +13,7 @@ func drawBattery(
   level: Double,
   charging: Bool,
   warn: Bool,
+  lowPower: Bool,
   pointSize: CGFloat,
   scale: CGFloat,
   weight: NSFont.Weight,
@@ -126,6 +127,9 @@ func drawBattery(
     overlay("bolt.fill", heightFrac: 1.22, tint: color)
   } else if warn {
     overlay("exclamationmark.triangle.fill", heightFrac: 1.35, tint: color)
+  } else if lowPower {
+    // Low Power Mode badge, in yellow (like macOS's yellow LPM battery).
+    overlay("leaf.fill", heightFrac: 1.2, tint: parseColor("0xffffd60a"))
   }
 
   NSGraphicsContext.restoreGraphicsState()

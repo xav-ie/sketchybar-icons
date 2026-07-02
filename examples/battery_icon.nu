@@ -27,6 +27,12 @@ def battery-color [percent: int, plugged: bool] {
   }
 }
 
+# Low Power Mode on? (`pmset -g` reports `lowpowermode 0|1`.)
+def is-lowpower [] {
+  let m = (pmset -g | parse -r 'lowpowermode\s+(?<v>\d+)')
+  ($m | length) > 0 and (($m | first | get v) == "1")
+}
+
 # Render (or reuse) the PNG for this state and return its path. The filename is
 # derived from the icon's appearance so (a) sketchybar reloads whenever the look
 # changes, since the path changes, and (b) unchanged states skip re-rendering.
@@ -35,10 +41,13 @@ def render [percent: int, plugged: bool] {
   let lvl = (($percent | into float) / 100)
   # Critically low (and not charging) shows a warning triangle overlay.
   let warn = ((not $plugged) and $percent <= 5)
-  let key = $"fill-($percent)-($plugged)-($warn)-($color)-($POINT_SIZE)-($WEIGHT)" | str replace --all "0x" ""
+  # Low Power Mode shows a yellow leaf badge. The renderer's priority is
+  # charging > warning > low-power, so it only appears while discharging above 5%.
+  let low = (is-lowpower)
+  let key = $"fill-($percent)-($plugged)-($warn)-($low)-($color)-($POINT_SIZE)-($WEIGHT)" | str replace --all "0x" ""
   let out = $"($CACHE_DIR)/battery-($key).png"
   if not ($out | path exists) {
-    sketchybar-icons battery --level $lvl --charging ($plugged | into string) --warn ($warn | into string) --point-size $POINT_SIZE --scale 2 --weight $WEIGHT --color $color --out $out
+    sketchybar-icons battery --level $lvl --charging ($plugged | into string) --warn ($warn | into string) --lowpower ($low | into string) --point-size $POINT_SIZE --scale 2 --weight $WEIGHT --color $color --out $out
   }
   $out
 }

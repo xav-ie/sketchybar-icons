@@ -46,11 +46,13 @@ case "battery":
   let scale = flags["scale"].flatMap { Double($0) } ?? 2.0
   let charging = (flags["charging"] ?? "false") == "true"
   let warn = (flags["warn"] ?? "false") == "true"
+  let lowPower = (flags["lowpower"] ?? "false") == "true"
   let color = parseColor(flags["color"] ?? "0xffffffff")
   let ok = drawBattery(
     level: level,
     charging: charging,
     warn: warn,
+    lowPower: lowPower,
     pointSize: CGFloat(pointSize),
     scale: CGFloat(scale),
     weight: parseWeight(flags["weight"] ?? "regular"),
