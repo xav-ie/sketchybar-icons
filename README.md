@@ -6,17 +6,24 @@ Render **native macOS Battery / Wi-Fi icons** (and any SF Symbol) to PNG files f
 
 ## Gallery
 
+<!-- Widths are proportional to each strip's tile count so every icon renders
+     the same size (battery rows have 11 tiles = 100%; wifi has 6 = ~54.5%). -->
+
 Battery discharging — continuous fill, red when low, warning triangle when critical:
 
-![battery discharging](assets/battery-discharging.png)
+<img src="assets/battery-discharging.png" width="100%" alt="battery discharging">
 
-Battery charging — real level underneath a bolt with a knocked-out halo:
+Battery charging — real level under a bolt with a knocked-out halo:
 
-![battery charging](assets/battery-charging.png)
+<img src="assets/battery-charging.png" width="100%" alt="battery charging">
+
+Low Power Mode — the bar turns yellow (still red when low, warning when critical):
+
+<img src="assets/battery-lowpower.png" width="100%" alt="battery low power mode">
 
 Wi-Fi — arcs fill by live RSSI, plus Personal Hotspot, disconnected, and off:
 
-![wifi](assets/wifi.png)
+<img src="assets/wifi.png" width="54.5%" alt="wifi">
 
 > Prefer not to build anything? Grab a ready-made PNG set from the
 > [latest release](https://github.com/xav-ie/sketchybar-icons/releases/latest).

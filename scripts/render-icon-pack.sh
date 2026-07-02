@@ -11,25 +11,40 @@ mkdir -p "$OUT/battery" "$OUT/wifi"
 
 lvl() { awk "BEGIN { printf \"%.2f\", $1 / 100 }"; }
 
-# Battery, discharging: white, red at <=20%, warning triangle at <=5%.
+WHITE=0xffffffff RED=0xffff453a GREEN=0xff30d158 YELLOW=0xffffd60a
+# Outline is always white; only the bar (--fill-color) is coloured.
+batt() { "$BIN" battery --point-size "$PS" --scale 2 --weight thin --color "$WHITE" "$@"; }
+
+# Discharging: white bar, red at <=20%, warning triangle at <=5%.
 for p in $(seq 0 5 100); do
   if [ "$p" -le 5 ]; then
-    color=0xffff453a warn=true
+    f=$RED warn=true
   elif [ "$p" -le 20 ]; then
-    color=0xffff453a warn=false
+    f=$RED warn=false
   else
-    color=0xffffffff warn=false
+    f=$WHITE warn=false
   fi
-  "$BIN" battery --level "$(lvl "$p")" --charging false --warn "$warn" \
-    --point-size "$PS" --scale 2 --weight thin --color "$color" \
+  batt --level "$(lvl "$p")" --charging false --warn "$warn" --fill-color "$f" \
     --out "$OUT/battery/discharge-$(printf '%03d' "$p").png"
 done
 
-# Battery, charging: green with bolt.
+# Charging: green bar with bolt.
 for p in $(seq 0 5 100); do
-  "$BIN" battery --level "$(lvl "$p")" --charging true --warn false \
-    --point-size "$PS" --scale 2 --weight thin --color 0xff30d158 \
+  batt --level "$(lvl "$p")" --charging true --fill-color "$GREEN" \
     --out "$OUT/battery/charge-$(printf '%03d' "$p").png"
+done
+
+# Low Power Mode: yellow bar (red at <=20%, warning at <=5%).
+for p in $(seq 0 5 100); do
+  if [ "$p" -le 5 ]; then
+    f=$RED warn=true
+  elif [ "$p" -le 20 ]; then
+    f=$RED warn=false
+  else
+    f=$YELLOW warn=false
+  fi
+  batt --level "$(lvl "$p")" --charging false --warn "$warn" --fill-color "$f" \
+    --out "$OUT/battery/lowpower-$(printf '%03d' "$p").png"
 done
 
 # Wi-Fi: signal levels, disconnected, off.

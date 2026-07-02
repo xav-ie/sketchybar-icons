@@ -12,7 +12,7 @@
 
 const CACHE_DIR = ("~/.cache/sketchybar" | path expand)
 # Point size (= battery body height) for the rendered icon.
-const POINT_SIZE = 18
+const POINT_SIZE = 22
 # SF Symbol weight for the battery.0 outline (stroke thickness): ultralight,
 # thin, light, regular, medium, semibold, bold.
 const WEIGHT = "thin"
