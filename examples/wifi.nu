@@ -51,20 +51,34 @@ def read-wifi [] {
     }
 }
 
+# True when tethered to an iPhone Personal Hotspot. iPhone hotspots (over
+# Wi-Fi/USB/Bluetooth) hand out the 172.20.10.0/28 subnet with gateway
+# 172.20.10.1 — a Location-free signal (SSID would need Location permission).
+# Full path since the launchd agent's PATH doesn't include /sbin.
+def is-hotspot [] {
+  (do -i { /sbin/route -n get default } | complete | get stdout | default ""
+    | str contains "gateway: 172.20.10.1")
+}
+
 # Render (or reuse) the PNG for the current state; return its path. Filename is
 # derived from the appearance so sketchybar reloads on change and skips
 # re-rendering when unchanged.
 def render [] {
-  let state = (read-wifi)
   let color = "0xffffffff"
 
-  let spec = if ($state.power? | default "on") != "on" {
-    { sym: "wifi.slash", value: null, key: "off" }
-  } else if ($state.associated? | default "no") != "yes" {
-    { sym: "wifi.exclamationmark", value: null, key: "noassoc" }
+  # Hotspot takes priority (works even if Wi-Fi is off and it's USB/BT tethered).
+  let spec = if (is-hotspot) {
+    { sym: "personalhotspot", value: null, key: "hotspot" }
   } else {
-    let v = (signal-value ($state.fraction | into float))
-    { sym: "wifi", value: $v, key: $"on-($v)" }
+    let state = (read-wifi)
+    if ($state.power? | default "on") != "on" {
+      { sym: "wifi.slash", value: null, key: "off" }
+    } else if ($state.associated? | default "no") != "yes" {
+      { sym: "wifi.exclamationmark", value: null, key: "noassoc" }
+    } else {
+      let v = (signal-value ($state.fraction | into float))
+      { sym: "wifi", value: $v, key: $"on-($v)" }
+    }
   }
 
   let out = $"($CACHE_DIR)/wifi-($spec.key)-($POINT_SIZE)-w($MIN_WIDTH)-x($X_SHIFT).png"

@@ -14,7 +14,7 @@ Battery charging — real level underneath a bolt with a knocked-out halo:
 
 ![battery charging](assets/battery-charging.png)
 
-Wi-Fi — arcs fill by live RSSI, plus disconnected and off:
+Wi-Fi — arcs fill by live RSSI, plus Personal Hotspot, disconnected, and off:
 
 ![wifi](assets/wifi.png)
 
