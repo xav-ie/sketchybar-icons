@@ -132,6 +132,11 @@ func drawBattery(
     overlay("exclamationmark.triangle.fill", heightFrac: 1.35, tint: fillColor)
   }
 
+  // Redraw the outline on top so it always keeps its colour (white) even where
+  // an overlay glyph crosses it — the outline stays clean, the glyph reads as
+  // tucked behind it.
+  outline.draw(in: NSRect(origin: .zero, size: size), from: .zero, operation: .sourceOver, fraction: 1.0)
+
   NSGraphicsContext.restoreGraphicsState()
 
   guard let png = rep.representation(using: .png, properties: [:]) else { return false }
