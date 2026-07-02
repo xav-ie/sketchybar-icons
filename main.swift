@@ -7,6 +7,10 @@ import AppKit
 //                           [--color <0xAARRGGBB>] [--palette <hex,hex,...>]
 //                           --out <path>
 //   sketchybar-icons wifi        # prints live Wi-Fi state (CoreWLAN)
+//   sketchybar-icons clock  --hour <0..23> --minute <0..59>
+//                           [--point-size <n>] [--scale <n>]
+//                           [--color <0xAARRGGBB>] [--minute-color <0xAARRGGBB>]
+//                           --out <path>
 //
 // Renders Apple's own SF Symbols to PNGs so the bar can draw native Battery/Wi-Fi
 // icons without screen-recording the real Control Center items.
@@ -62,6 +66,28 @@ case "battery":
   if !ok { exit(1) }
   print((outPath as NSString).expandingTildeInPath)
 
+case "clock":
+  // Analog clock face at a given time (drawn directly, not an SF Symbol).
+  let flags = parseFlags(args[2...])
+  guard let outPath = flags["out"] else { fail("clock: --out is required") }
+  let hour = flags["hour"].flatMap { Int($0) } ?? 0
+  let minute = flags["minute"].flatMap { Int($0) } ?? 0
+  let pointSize = flags["point-size"].flatMap { Double($0) } ?? 18.0
+  let scale = flags["scale"].flatMap { Double($0) } ?? 2.0
+  // --color = ring + hour hand; --minute-color = minute hand (defaults to --color).
+  let color = parseColor(flags["color"] ?? "0xffffffff")
+  let colors = flags["minute-color"].map { [color, parseColor($0)] } ?? [color]
+  let ok = drawClock(
+    hour: hour,
+    minute: minute,
+    pointSize: CGFloat(pointSize),
+    scale: CGFloat(scale),
+    colors: colors,
+    outPath: outPath
+  )
+  if !ok { exit(1) }
+  print((outPath as NSString).expandingTildeInPath)
+
 case "symbol":
   let flags = parseFlags(args[2...])
   guard let name = flags["symbol"] else { fail("symbol: --symbol is required") }
@@ -95,5 +121,5 @@ case "symbol":
   print((outPath as NSString).expandingTildeInPath)
 
 default:
-  fail("unknown subcommand '\(args[1])' (expected: symbol, wifi)")
+  fail("unknown subcommand '\(args[1])' (expected: symbol, wifi, battery, clock)")
 }
