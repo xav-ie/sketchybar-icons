@@ -46,17 +46,17 @@ case "battery":
   let scale = flags["scale"].flatMap { Double($0) } ?? 2.0
   let charging = (flags["charging"] ?? "false") == "true"
   let warn = (flags["warn"] ?? "false") == "true"
-  let lowPower = (flags["lowpower"] ?? "false") == "true"
+  // --color = outline (and overlay); --fill-color = the bar (defaults to --color).
   let color = parseColor(flags["color"] ?? "0xffffffff")
+  let colors = flags["fill-color"].map { [color, parseColor($0)] } ?? [color]
   let ok = drawBattery(
     level: level,
     charging: charging,
     warn: warn,
-    lowPower: lowPower,
     pointSize: CGFloat(pointSize),
     scale: CGFloat(scale),
     weight: parseWeight(flags["weight"] ?? "regular"),
-    colors: [color],
+    colors: colors,
     outPath: outPath
   )
   if !ok { exit(1) }

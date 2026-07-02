@@ -13,7 +13,6 @@ func drawBattery(
   level: Double,
   charging: Bool,
   warn: Bool,
-  lowPower: Bool,
   pointSize: CGFloat,
   scale: CGFloat,
   weight: NSFont.Weight,
@@ -21,7 +20,11 @@ func drawBattery(
   outPath: String
 ) -> Bool {
   let lvl = max(0.0, min(1.0, level))
+  // colors[0] = outline (and overlay) colour; colors[1] = fill colour (defaults
+  // to the outline colour). Lets Low Power Mode tint just the bar yellow while
+  // the outline stays white.
   let color = colors.first ?? .white
+  let fillColor = colors.count > 1 ? colors[1] : color
 
   guard let base = NSImage(systemSymbolName: "battery.0", accessibilityDescription: nil) else {
     FileHandle.standardError.write(Data("sketchybar-icons: battery.0 unavailable\n".utf8))
@@ -87,7 +90,7 @@ func drawBattery(
   let fy = interiorBottom + m
   let fh = interiorH - 2 * m
   if fw > 0.5 {
-    color.setFill()
+    fillColor.setFill()
     NSBezierPath(roundedRect: NSRect(x: fx, y: fy, width: fw, height: fh),
       xRadius: fh * 0.3, yRadius: fh * 0.3).fill()
   }
@@ -124,12 +127,9 @@ func drawBattery(
 
   if charging {
     // Bolt big enough to cross the top/bottom battery lines.
-    overlay("bolt.fill", heightFrac: 1.22, tint: color)
+    overlay("bolt.fill", heightFrac: 1.22, tint: fillColor)
   } else if warn {
-    overlay("exclamationmark.triangle.fill", heightFrac: 1.35, tint: color)
-  } else if lowPower {
-    // Low Power Mode badge, in yellow (like macOS's yellow LPM battery).
-    overlay("leaf.fill", heightFrac: 1.2, tint: parseColor("0xffffd60a"))
+    overlay("exclamationmark.triangle.fill", heightFrac: 1.35, tint: fillColor)
   }
 
   NSGraphicsContext.restoreGraphicsState()

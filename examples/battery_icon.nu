@@ -17,11 +17,15 @@ const POINT_SIZE = 18
 # thin, light, regular, medium, semibold, bold.
 const WEIGHT = "thin"
 
-def battery-color [percent: int, plugged: bool] {
+# The bar (fill) colour — the outline stays white. Green charging, red when low
+# (overrides Low Power Mode), yellow in Low Power Mode, else white.
+def bar-color [percent: int, plugged: bool, lowpower: bool] {
   if $plugged {
-    "0xff30d158" # green
+    "0xff30d158" # green (charging)
   } else if $percent <= 20 {
-    "0xffff453a" # red
+    "0xffff453a" # red (low)
+  } else if $lowpower {
+    "0xffffd60a" # yellow (Low Power Mode)
   } else {
     "0xffffffff" # white
   }
@@ -37,17 +41,15 @@ def is-lowpower [] {
 # derived from the icon's appearance so (a) sketchybar reloads whenever the look
 # changes, since the path changes, and (b) unchanged states skip re-rendering.
 def render [percent: int, plugged: bool] {
-  let color = (battery-color $percent $plugged)
+  let fill = (bar-color $percent $plugged (is-lowpower))
   let lvl = (($percent | into float) / 100)
   # Critically low (and not charging) shows a warning triangle overlay.
   let warn = ((not $plugged) and $percent <= 5)
-  # Low Power Mode shows a yellow leaf badge. The renderer's priority is
-  # charging > warning > low-power, so it only appears while discharging above 5%.
-  let low = (is-lowpower)
-  let key = $"fill-($percent)-($plugged)-($warn)-($low)-($color)-($POINT_SIZE)-($WEIGHT)" | str replace --all "0x" ""
+  # `fill` encodes charging/low/low-power, so it busts the cache key.
+  let key = $"fill-($percent)-($plugged)-($warn)-($fill)-($POINT_SIZE)-($WEIGHT)" | str replace --all "0x" ""
   let out = $"($CACHE_DIR)/battery-($key).png"
   if not ($out | path exists) {
-    sketchybar-icons battery --level $lvl --charging ($plugged | into string) --warn ($warn | into string) --lowpower ($low | into string) --point-size $POINT_SIZE --scale 2 --weight $WEIGHT --color $color --out $out
+    sketchybar-icons battery --level $lvl --charging ($plugged | into string) --warn ($warn | into string) --point-size $POINT_SIZE --scale 2 --weight $WEIGHT --color 0xffffffff --fill-color $fill --out $out
   }
   $out
 }
