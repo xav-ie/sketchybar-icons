@@ -40,6 +40,7 @@ wifi() { "$BIN" symbol --symbol "$1" ${2:+--value "$2"} --point-size 18 --scale 
 wifi wifi 1.0 full
 wifi wifi 0.5 medium
 wifi wifi 0.2 low
+wifi personalhotspot "" hotspot
 wifi wifi.exclamationmark "" disconnected
 wifi wifi.slash "" off
 
