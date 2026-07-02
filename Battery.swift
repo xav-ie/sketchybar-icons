@@ -101,7 +101,9 @@ func drawBattery(
     guard let sym = NSImage(systemSymbolName: name, accessibilityDescription: nil) else { return }
     let cfgS = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
     let h = interiorH * heightFrac
-    let gap = interiorH * 0.16
+    // Halo width. Kept generous so it stays visible at small bar sizes (a thin
+    // gap disappears once the icon is scaled down).
+    let gap = interiorH * 0.26
     func rect(_ img: NSImage, _ dx: CGFloat = 0, _ dy: CGFloat = 0) -> NSRect {
       let w = h * (img.size.width / max(1, img.size.height))
       return NSRect(x: interiorCenterX - w / 2 + dx, y: interiorCenterY - h / 2 + dy, width: w, height: h)
