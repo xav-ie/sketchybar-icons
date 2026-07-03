@@ -16,11 +16,13 @@ mkdir -p "$A"
 # Match the example plugins (examples/*.nu).
 BATT_PS=22 WIFI_PS=14 WIFI_MINW=26 WIFI_XSHIFT=0.75 CLOCK_PS=20
 WHITE=0xffffffff RED=0xffff453a GREEN=0xff30d158 YELLOW=0xffffd60a
-INNER='#23232e' PAGE='#17171f'
+INNER='#23232e' PAGE='none'
 
 lvl() { awk "BEGIN { printf \"%.2f\", $1 / 100 }"; }
-# tile: PAGE-bg canvas with a rounded inner rect + the icon centred at its
-# native rendered size (no upscaling — keep sizes bar-accurate & relative).
+# tile: transparent canvas (PAGE=none) with a rounded inner "button" rect + the
+# icon centred at its native rendered size (no upscaling — keep sizes
+# bar-accurate & relative). Only the button tiles are painted; the surrounding
+# page stays transparent so the gallery adapts to the README's light/dark theme.
 tile() { magick -size 108x60 xc:"$PAGE" -fill "$INNER" -draw "roundrectangle 6,4,101,55,9,9" \
   "$1" -gravity center -composite "$2"; }
 # -strip drops PNG metadata (timestamps etc.) so output is byte-deterministic
@@ -77,5 +79,23 @@ clockrow() { # $1=outfile
   row "$out" "$A"/_c*.png; rm -f "$A"/_c*.png
 }
 clockrow "$A/clock.png"
+
+# System row: static SF Symbols that replace common Nerd-Font bar glyphs — the
+# Control Center toggles (switch.2) and the macOS volume family (speaker.*).
+# Rendered all-white via `--palette` (multi-layer symbols, so a single
+# hierarchical colour would dim the toggles/waves) using the generic `symbol`
+# subcommand. Matches wifi's point size so they line up in a bar.
+sysicon() { # $1=symbol  $2=name
+  "$BIN" symbol --symbol "$1" --point-size "$WIFI_PS" --scale 2 \
+    --palette "$WHITE,$WHITE,$WHITE,$WHITE" --out /tmp/_g.png >/dev/null
+  tile /tmp/_g.png "$A/_s$2.png"
+}
+sysicon switch.2 1cc
+sysicon speaker.slash.fill 2mute
+sysicon speaker.fill 3vol0
+sysicon speaker.wave.1.fill 4vol1
+sysicon speaker.wave.2.fill 5vol2
+sysicon speaker.wave.3.fill 6vol3
+row "$A/system.png" "$A"/_s*.png; rm -f "$A"/_s*.png
 
 echo "Rendered gallery to $A"

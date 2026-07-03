@@ -7,7 +7,8 @@ Render **native macOS Battery / Wi-Fi icons** (and any SF Symbol) to PNG files f
 ## Gallery
 
 <!-- Widths are proportional to each strip's tile count so every icon renders
-     the same size (battery + clock rows have 11 tiles = 100%; wifi has 6 = ~54.5%). -->
+     the same size (battery + clock rows have 11 tiles = 100%; wifi and system
+     rows have 6 = ~54.5%). -->
 
 Battery discharging — continuous fill, red when low, warning triangle when critical:
 
@@ -28,6 +29,11 @@ Wi-Fi — Personal Hotspot, then arcs filling by live RSSI, disconnected, and of
 Clock — a hand-drawn analog face with real minute-hand precision (red minute hand):
 
 <img src="assets/clock.png" width="100%" alt="clock">
+
+Control Center + Volume — the `switch.2` toggles and the macOS `speaker.*` family
+(muted, then 0→3 waves), rendered all-white to drop the Nerd-Font dependency:
+
+<img src="assets/system.png" width="54.5%" alt="control center and volume">
 
 > Prefer not to build anything? Grab a ready-made PNG set from the
 > [latest release](https://github.com/xav-ie/sketchybar-icons/releases/latest).
@@ -101,6 +107,13 @@ sketchybar-icons battery --level 0.45 --charging true --point-size 18 --scale 2 
 # Analog clock at 10:08, white face with a red minute hand
 sketchybar-icons clock --hour 10 --minute 8 --point-size 18 --scale 2 \
   --color 0xffffffff --minute-color 0xffff453a --out ~/.cache/sketchybar/clock.png
+
+# Control Center (switch.2) and volume (speaker.*) — plain SF Symbols, all-white.
+# `--palette` (not `--color`) keeps every layer solid instead of hierarchical-dimmed.
+sketchybar-icons symbol --symbol switch.2 --point-size 14 --scale 2 \
+  --palette 0xffffffff,0xffffffff,0xffffffff --out ~/.cache/sketchybar/control-center.png
+sketchybar-icons symbol --symbol speaker.wave.2.fill --point-size 12 --scale 2 \
+  --palette 0xffffffff,0xffffffff,0xffffffff,0xffffffff --out ~/.cache/sketchybar/volume.png
 ```
 
 Point the item at the PNG:
