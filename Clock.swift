@@ -7,9 +7,17 @@ import AppKit
 /// rounded line caps). It gives real minute-hand precision, which the discrete
 /// Nerd-Font `clock_time_*` glyphs can't.
 ///
-/// - `colors[0]` tints the ring and the (shorter, thicker) hour hand.
-/// - `colors[1]` tints the (longer, thinner) minute hand; defaults to
-///   `colors[0]` when a single colour is given.
+/// Both hands are skinny kite/lozenge shapes — widest at the centre, tapering to
+/// a sharp point at the tip and a shorter sharp counterweight tail past the
+/// centre (the classic analog-hand silhouette). The hour is short; the minute is
+/// long. Filling the hands (vs. a hairline stroke) also keeps the accent-coloured
+/// minute hand legible against a dark bar, where a thin coloured line washes out.
+///
+/// - `colors[0]` tints the ring and the hour hand.
+/// - `colors[1]` tints the minute hand; defaults to `colors[0]` when a single
+///   colour is given.
+/// - The ring stroke is sized to sit at the same optical weight as the battery's
+///   `thin` SF Symbol outline, so the two icons match side by side in a bar.
 /// - The glyph is drawn into a square of side `pointSize` points, rendered at
 ///   `pointSize * scale` pixels so it's crisp on Retina and sits at the same
 ///   scale as the other icons (18pt @2× = 36px).
@@ -45,9 +53,10 @@ func drawClock(
 
   let s = side
   let cx = s / 2, cy = s / 2
-  let ring = s * 0.055
+  // Ring stroke ≈ the battery's `thin` SF Symbol outline (~0.048·pointSize) so the
+  // two read at the same weight side by side.
+  let ring = s * 0.048
   let radius = s * 0.5 - ring
-  ctx.setLineCap(.round)
 
   // Face ring.
   primary.setStroke()
@@ -59,20 +68,30 @@ func drawClock(
   let h = CGFloat(hour % 12)
   let hourAngle = (h / 12 + m / 720) * 2 * .pi
   let minuteAngle = m / 60 * 2 * .pi
-  func hand(_ angle: CGFloat, length: CGFloat, width: CGFloat, color: NSColor) {
-    color.setStroke()
-    ctx.setLineWidth(width)
-    ctx.move(to: CGPoint(x: cx, y: cy))
-    ctx.addLine(to: CGPoint(x: cx + sin(angle) * length, y: cy + cos(angle) * length))
-    ctx.strokePath()
+
+  // Kite/lozenge hand: widest at the centre (2·halfWidth), tapering to a sharp
+  // point at `front` and a shorter sharp counterweight tail at `tail` behind the
+  // centre.
+  func hand(_ angle: CGFloat, front: CGFloat, tail: CGFloat, halfWidth: CGFloat, color: NSColor) {
+    let dx = sin(angle), dy = cos(angle)   // along the hand
+    let px = cos(angle), py = -sin(angle)  // perpendicular
+    let tip = CGPoint(x: cx + dx * front, y: cy + dy * front)
+    let back = CGPoint(x: cx - dx * tail, y: cy - dy * tail)
+    let left = CGPoint(x: cx + px * halfWidth, y: cy + py * halfWidth)
+    let right = CGPoint(x: cx - px * halfWidth, y: cy - py * halfWidth)
+    color.setFill()
+    ctx.move(to: tip)
+    ctx.addLine(to: right)
+    ctx.addLine(to: back)
+    ctx.addLine(to: left)
+    ctx.closePath()
+    ctx.fillPath()
   }
 
-  // Minute hand first (longer), then the hour hand (shorter) on top: the minute
-  // hand extends past the hour hand so its tip always shows, and layering the
-  // hour hand above keeps it readable where they cross. Both hands share a
-  // thickness — only length distinguishes them.
-  hand(minuteAngle, length: radius * 0.76, width: s * 0.055, color: accent)
-  hand(hourAngle, length: radius * 0.5, width: s * 0.055, color: primary)
+  // Minute hand first (under), hour hand on top: the hour hand reads clearly where
+  // they cross, and the longer minute hand still shows past it.
+  hand(minuteAngle, front: radius * 0.86, tail: radius * 0.18, halfWidth: s * 0.045, color: accent)
+  hand(hourAngle, front: radius * 0.48, tail: radius * 0.18, halfWidth: s * 0.042, color: primary)
 
   NSGraphicsContext.restoreGraphicsState()
 

@@ -81,10 +81,14 @@ sketchybar-icons clock   --hour 0..23 --minute 0..59 [--point-size N] [--scale N
 - **`clock`** — an analog clock face at `--hour`/`--minute`. SF Symbols has no
   time-aware clock (its `clock`/`deskclock` glyphs are frozen poses, with no
   hour-specific family), so the face is drawn directly with CoreGraphics in SF's
-  optical style (bare ring, rounded caps). Gives real **minute-hand precision**,
-  which the discrete Nerd-Font `clock_time_*` glyphs can't. `--color` tints the
-  ring + hour hand; `--minute-color` tints the minute hand (defaults to
-  `--color`).
+  optical style (bare ring sized to match the battery's `thin` outline). Gives
+  real **minute-hand precision**, which the discrete Nerd-Font `clock_time_*`
+  glyphs can't. Both hands are skinny **kite/lozenge** shapes — sharp point at
+  the tip, short counterweight tail past the centre — with a short hour hand and
+  a long minute hand. Filling the hands (vs. a hairline stroke) keeps the
+  accent-coloured minute hand legible where a thin line would wash out at small
+  sizes. `--color` tints the ring + hour hand; `--minute-color` tints the minute
+  hand (defaults to `--color`).
 
 All rendering happens on demand — cache the PNGs by state and you re-render only
 when the icon changes (vs. the alias's constant capture).
