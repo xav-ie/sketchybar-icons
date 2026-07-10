@@ -43,6 +43,7 @@
             "LICENSE"
             "flake.lock"
             ".gitignore"
+            ".envrc"
             "*.png" # gallery/asset images
             "*.nuon" # data/config format (nufmt.nuon), no formatter
           ];

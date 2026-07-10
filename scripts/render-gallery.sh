@@ -5,13 +5,22 @@
 # what the bar actually draws (magnifying the docs is what hid earlier
 # rendering regressions).
 #
-# Usage: render-gallery.sh <path-to-sketchybar-icons> [assets-dir]
-# Requires ImageMagick (`magick`).
+# Usage: nix run .#render-gallery [assets-dir]   (assets-dir defaults to ./assets)
+#
+# Runtime deps (sketchybar-icons, ImageMagick, oxipng) are bundled by the Nix
+# app. To run this file directly instead, enter `nix develop` first so they're
+# on PATH.
 set -euo pipefail
 
-BIN="${1:?usage: render-gallery.sh <sketchybar-icons> [assets-dir]}"
-A="${2:-$(cd "$(dirname "$0")/.." && pwd)/assets}"
+# The renderer binary comes from PATH (the Nix app's runtimeInputs, or the
+# devShell); the assets dir defaults to ./assets in the current directory.
+BIN=sketchybar-icons
+A="${1:-$(pwd)/assets}"
 mkdir -p "$A"
+
+# Scratch file for each freshly-rendered glyph before it's tiled. Honour $TMPDIR
+# (the Nix build sandbox has no writable /tmp) and fall back to /tmp otherwise.
+TMP="${TMPDIR:-/tmp}"
 
 # Match the example plugins (examples/*.nu).
 BATT_PS=22 WIFI_PS=14 WIFI_MINW=26 WIFI_XSHIFT=0.75 CLOCK_PS=20
@@ -27,10 +36,13 @@ tile() { magick -size 108x60 xc:"$PAGE" -fill "$INNER" -draw "roundrectangle 6,4
   "$1" -gravity center -composite "$2"; }
 # -strip drops PNG metadata (timestamps etc.) so output is byte-deterministic
 # for a given OS + ImageMagick — lets CI regenerate and detect real changes.
+# Then losslessly optimise: these flat-colour glyph montages shrink a lot, and
+# oxipng is deterministic so the byte-for-byte CI diff still holds.
 row() {
   local out=$1
   shift
   magick "$@" +append -strip "$out"
+  oxipng --opt max --strip safe --quiet "$out"
 }
 
 # Battery rows: discharging / low-power run 100→0; charging runs 0→100 so the
@@ -49,8 +61,8 @@ battrow() { # $1=outfile  $2=charging(true|false)  $3=lowpower-fill-colour("" if
     else f=$WHITE wn=false; fi
     "$BIN" battery --level "$(lvl "$p")" --charging "$chg" --warn "$wn" \
       --point-size "$BATT_PS" --scale 2 --weight thin --color "$WHITE" --fill-color "$f" \
-      --out /tmp/_g.png >/dev/null
-    tile /tmp/_g.png "$A/_t$(printf '%03d' "$i").png"
+      --out "$TMP/_g.png" >/dev/null
+    tile "$TMP/_g.png" "$A/_t$(printf '%03d' "$i").png"
     i=$((i + 1))
   done
   row "$out" "$A"/_t*.png
@@ -63,8 +75,8 @@ battrow "$A/battery-lowpower.png" false "$YELLOW"
 # Wi-Fi row: signal levels, hotspot, disconnected, off.
 wifi() { # $1=symbol  $2=value("" for none)  $3=name
   "$BIN" symbol --symbol "$1" ${2:+--value "$2"} --point-size "$WIFI_PS" --scale 2 \
-    --min-width "$WIFI_MINW" --x-shift "$WIFI_XSHIFT" --color "$WHITE" --out /tmp/_g.png >/dev/null
-  tile /tmp/_g.png "$A/_w$3.png"
+    --min-width "$WIFI_MINW" --x-shift "$WIFI_XSHIFT" --color "$WHITE" --out "$TMP/_g.png" >/dev/null
+  tile "$TMP/_g.png" "$A/_w$3.png"
 }
 wifi personalhotspot "" 1hotspot
 wifi wifi 1.0 2full
@@ -84,8 +96,8 @@ clockrow() { # $1=outfile
     # shellcheck disable=SC2086
     set -- $t
     "$BIN" clock --hour "$1" --minute "$2" --point-size "$CLOCK_PS" --scale 2 \
-      --color "$WHITE" --minute-color "$RED" --out /tmp/_g.png >/dev/null
-    tile /tmp/_g.png "$A/_c$(printf '%03d' "$i").png"
+      --color "$WHITE" --minute-color "$RED" --out "$TMP/_g.png" >/dev/null
+    tile "$TMP/_g.png" "$A/_c$(printf '%03d' "$i").png"
     i=$((i + 1))
   done
   row "$out" "$A"/_c*.png
@@ -100,8 +112,8 @@ clockrow "$A/clock.png"
 # subcommand. Matches wifi's point size so they line up in a bar.
 sysicon() { # $1=symbol  $2=name
   "$BIN" symbol --symbol "$1" --point-size "$WIFI_PS" --scale 2 \
-    --palette "$WHITE,$WHITE,$WHITE,$WHITE" --out /tmp/_g.png >/dev/null
-  tile /tmp/_g.png "$A/_s$2.png"
+    --palette "$WHITE,$WHITE,$WHITE,$WHITE" --out "$TMP/_g.png" >/dev/null
+  tile "$TMP/_g.png" "$A/_s$2.png"
 }
 sysicon switch.2 1cc
 sysicon speaker.slash.fill 2mute
@@ -118,8 +130,8 @@ rm -f "$A"/_s*.png
 # plugin draws them (single white --color), so the row matches the bar.
 appicon() { # $1=symbol  $2=name
   "$BIN" symbol --symbol "$1" --point-size "$WIFI_PS" --scale 2 \
-    --color "$WHITE" --out /tmp/_g.png >/dev/null
-  tile /tmp/_g.png "$A/_a$2.png"
+    --color "$WHITE" --out "$TMP/_g.png" >/dev/null
+  tile "$TMP/_g.png" "$A/_a$2.png"
 }
 appicon touchid 1touchid
 appicon hand.raised.fill 2gatekeeper

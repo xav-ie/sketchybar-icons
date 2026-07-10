@@ -11,6 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          # `nix flake check` builds checks.gallery, which is __noChroot (SF
+          # Symbol rendering needs host fonts, unreachable in the sandbox).
+          extra-conf: sandbox = relaxed
       - name: Build (nix)
         run: nix build -L
       - name: Smoke test

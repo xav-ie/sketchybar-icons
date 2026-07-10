@@ -21,6 +21,7 @@
       imports = [
         ./modules/flake/packages.nix
         ./modules/flake/treefmt.nix
+        ./modules/flake/devshell.nix
       ];
     };
 }

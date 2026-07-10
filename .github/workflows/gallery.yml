@@ -6,7 +6,10 @@ name: Gallery
 # Instead, whenever the rendering code changes, the runner regenerates the
 # gallery and commits it back — so assets/ always match one canonical renderer.
 #
-# No loop: this only triggers on the Swift/script paths below, and the commit it
+# Rendering is shared: this runs the same `nix run .#render-gallery` flake app a
+# dev runs locally (and that `checks.gallery` validates), not a bespoke command.
+#
+# No loop: this only triggers on the rendering paths below, and the commit it
 # makes touches assets/ (not in `paths`), so the pushed commit doesn't re-trigger.
 
 on:
@@ -15,6 +18,7 @@ on:
     paths:
       - "*.swift"
       - "scripts/render-gallery.sh"
+      - "modules/flake/packages.nix"
       - ".github/workflows/gallery.yml"
 
 permissions:
@@ -26,10 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
-      - name: Build (nix)
-        run: nix build -L
       - name: Render gallery
-        run: nix shell nixpkgs#imagemagick -c bash scripts/render-gallery.sh ./result/bin/sketchybar-icons
+        # Shared logic: the flake app bundles its runtime deps (sketchybar-icons,
+        # ImageMagick, oxipng) and writes the optimised montages to ./assets.
+        run: nix run .#render-gallery
       - name: Commit if changed
         run: |
           if git diff --quiet -- assets; then
