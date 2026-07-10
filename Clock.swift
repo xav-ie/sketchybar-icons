@@ -35,14 +35,8 @@ func drawClock(
 
   let side = pointSize
   let px = max(1, Int((side * scale).rounded()))
-  guard
-    let rep = NSBitmapImageRep(
-      bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px,
-      bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-      colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
-    )
+  guard let rep = makeRGBARep(pxW: px, pxH: px, pointSize: NSSize(width: side, height: side))
   else { return false }
-  rep.size = NSSize(width: side, height: side)
 
   NSGraphicsContext.saveGraphicsState()
   NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
@@ -52,7 +46,8 @@ func drawClock(
   }
 
   let s = side
-  let cx = s / 2, cy = s / 2
+  let cx = s / 2
+  let cy = s / 2
   // Ring stroke ≈ the battery's `thin` SF Symbol outline (~0.048·pointSize) so the
   // two read at the same weight side by side.
   let ring = s * 0.048
@@ -61,7 +56,8 @@ func drawClock(
   // Face ring.
   primary.setStroke()
   ctx.setLineWidth(ring)
-  ctx.strokeEllipse(in: CGRect(x: cx - radius, y: cy - radius, width: radius * 2, height: radius * 2))
+  ctx.strokeEllipse(
+    in: CGRect(x: cx - radius, y: cy - radius, width: radius * 2, height: radius * 2))
 
   // Hand angles, measured clockwise from 12 o'clock (up).
   let m = CGFloat(minute % 60)
@@ -73,8 +69,10 @@ func drawClock(
   // point at `front` and a shorter sharp counterweight tail at `tail` behind the
   // centre.
   func hand(_ angle: CGFloat, front: CGFloat, tail: CGFloat, halfWidth: CGFloat, color: NSColor) {
-    let dx = sin(angle), dy = cos(angle)   // along the hand
-    let px = cos(angle), py = -sin(angle)  // perpendicular
+    let dx = sin(angle)
+    let dy = cos(angle)  // along the hand
+    let px = cos(angle)
+    let py = -sin(angle)  // perpendicular
     let tip = CGPoint(x: cx + dx * front, y: cy + dy * front)
     let back = CGPoint(x: cx - dx * tail, y: cy - dy * tail)
     let left = CGPoint(x: cx + px * halfWidth, y: cy + py * halfWidth)
@@ -95,15 +93,5 @@ func drawClock(
 
   NSGraphicsContext.restoreGraphicsState()
 
-  guard let png = rep.representation(using: .png, properties: [:]) else { return false }
-  do {
-    let url = URL(fileURLWithPath: (outPath as NSString).expandingTildeInPath)
-    try FileManager.default.createDirectory(
-      at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-    try png.write(to: url)
-    return true
-  } catch {
-    FileHandle.standardError.write(Data("sketchybar-icons: clock write failed: \(error)\n".utf8))
-    return false
-  }
+  return writePNG(rep, to: outPath, label: "clock write")
 }

@@ -30,18 +30,19 @@ func parseColor(_ raw: String) -> NSColor {
   )
 }
 
+private let symbolWeights: [String: NSFont.Weight] = [
+  "ultralight": .ultraLight,
+  "thin": .thin,
+  "light": .light,
+  "regular": .regular,
+  "medium": .medium,
+  "semibold": .semibold,
+  "bold": .bold,
+]
+
 /// Parse an SF Symbol weight name (defaults to regular).
 func parseWeight(_ s: String) -> NSFont.Weight {
-  switch s.lowercased() {
-  case "ultralight": return .ultraLight
-  case "thin": return .thin
-  case "light": return .light
-  case "regular": return .regular
-  case "medium": return .medium
-  case "semibold": return .semibold
-  case "bold": return .bold
-  default: return .regular
-  }
+  symbolWeights[s.lowercased()] ?? .regular
 }
 
 /// Render an SF Symbol to a PNG file.
@@ -97,22 +98,11 @@ func renderSymbol(
   let canvasW = max(size.width, minWidth)
   let pxW = max(1, Int((canvasW * scale).rounded()))
   let pxH = max(1, Int((size.height * scale).rounded()))
-  guard
-    let rep = NSBitmapImageRep(
-      bitmapDataPlanes: nil,
-      pixelsWide: pxW,
-      pixelsHigh: pxH,
-      bitsPerSample: 8,
-      samplesPerPixel: 4,
-      hasAlpha: true,
-      isPlanar: false,
-      colorSpaceName: .deviceRGB,
-      bytesPerRow: 0,
-      bitsPerPixel: 0
-    )
-  else { return false }
   // Map the point-sized drawing onto the larger pixel buffer.
-  rep.size = NSSize(width: canvasW, height: size.height)
+  guard
+    let rep = makeRGBARep(
+      pxW: pxW, pxH: pxH, pointSize: NSSize(width: canvasW, height: size.height))
+  else { return false }
 
   NSGraphicsContext.saveGraphicsState()
   NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
@@ -128,17 +118,5 @@ func renderSymbol(
   )
   NSGraphicsContext.restoreGraphicsState()
 
-  guard let png = rep.representation(using: .png, properties: [:]) else { return false }
-  do {
-    let url = URL(fileURLWithPath: (outPath as NSString).expandingTildeInPath)
-    try FileManager.default.createDirectory(
-      at: url.deletingLastPathComponent(),
-      withIntermediateDirectories: true
-    )
-    try png.write(to: url)
-    return true
-  } catch {
-    FileHandle.standardError.write(Data("sketchybar-icons: write failed: \(error)\n".utf8))
-    return false
-  }
+  return writePNG(rep, to: outPath, label: "write")
 }

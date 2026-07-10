@@ -37,18 +37,12 @@ func drawBattery(
   let size = outline.size
   let pxW = max(1, Int((size.width * scale).rounded()))
   let pxH = max(1, Int((size.height * scale).rounded()))
-  guard
-    let rep = NSBitmapImageRep(
-      bitmapDataPlanes: nil, pixelsWide: pxW, pixelsHigh: pxH,
-      bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-      colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
-    )
-  else { return false }
-  rep.size = size
+  guard let rep = makeRGBARep(pxW: pxW, pxH: pxH, pointSize: size) else { return false }
 
   NSGraphicsContext.saveGraphicsState()
   NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-  outline.draw(in: NSRect(origin: .zero, size: size), from: .zero, operation: .sourceOver, fraction: 1.0)
+  outline.draw(
+    in: NSRect(origin: .zero, size: size), from: .zero, operation: .sourceOver, fraction: 1.0)
 
   // Measure the interior (empty space between the outline walls) from the drawn
   // outline. rep pixels are top-left origin; the drawing context is bottom-up.
@@ -61,7 +55,10 @@ func drawBattery(
     var start: Int? = nil
     for (i, f) in flags.enumerated() {
       if f, start == nil { start = i }
-      if !f, let s = start { out.append((s, i - 1)); start = nil }
+      if !f, let s = start {
+        out.append((s, i - 1))
+        start = nil
+      }
     }
     if let s = start { out.append((s, flags.count - 1)) }
     return out
@@ -91,8 +88,10 @@ func drawBattery(
   let fh = interiorH - 2 * m
   if fw > 0.5 {
     fillColor.setFill()
-    NSBezierPath(roundedRect: NSRect(x: fx, y: fy, width: fw, height: fh),
-      xRadius: fh * 0.3, yRadius: fh * 0.3).fill()
+    NSBezierPath(
+      roundedRect: NSRect(x: fx, y: fy, width: fw, height: fh),
+      xRadius: fh * 0.3, yRadius: fh * 0.3
+    ).fill()
   }
 
   // Overlay a glyph (charging bolt, or a low-battery warning triangle) centred
@@ -104,7 +103,8 @@ func drawBattery(
     let gap = interiorH * 0.16
     func rect(_ img: NSImage, _ dx: CGFloat = 0, _ dy: CGFloat = 0) -> NSRect {
       let w = h * (img.size.width / max(1, img.size.height))
-      return NSRect(x: interiorCenterX - w / 2 + dx, y: interiorCenterY - h / 2 + dy, width: w, height: h)
+      return NSRect(
+        x: interiorCenterX - w / 2 + dx, y: interiorCenterY - h / 2 + dy, width: w, height: h)
     }
     // Uniform halo: knock out the glyph *dilated* by `gap`. Scaling the glyph
     // grows it non-uniformly (thin strokes gain less), so instead stamp it around
@@ -114,7 +114,8 @@ func drawBattery(
       let steps = 32
       for i in 0..<steps {
         let a = 2.0 * Double.pi * Double(i) / Double(steps)
-        hb.draw(in: rect(hb, gap * CGFloat(cos(a)), gap * CGFloat(sin(a))),
+        hb.draw(
+          in: rect(hb, gap * CGFloat(cos(a)), gap * CGFloat(sin(a))),
           from: .zero, operation: .destinationOut, fraction: 1.0)
       }
     }
@@ -134,15 +135,5 @@ func drawBattery(
 
   NSGraphicsContext.restoreGraphicsState()
 
-  guard let png = rep.representation(using: .png, properties: [:]) else { return false }
-  do {
-    let url = URL(fileURLWithPath: (outPath as NSString).expandingTildeInPath)
-    try FileManager.default.createDirectory(
-      at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-    try png.write(to: url)
-    return true
-  } catch {
-    FileHandle.standardError.write(Data("sketchybar-icons: battery write failed: \(error)\n".utf8))
-    return false
-  }
+  return writePNG(rep, to: outPath, label: "battery write")
 }

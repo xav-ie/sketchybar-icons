@@ -27,24 +27,34 @@ tile() { magick -size 108x60 xc:"$PAGE" -fill "$INNER" -draw "roundrectangle 6,4
   "$1" -gravity center -composite "$2"; }
 # -strip drops PNG metadata (timestamps etc.) so output is byte-deterministic
 # for a given OS + ImageMagick — lets CI regenerate and detect real changes.
-row() { local out=$1; shift; magick "$@" +append -strip "$out"; }
+row() {
+  local out=$1
+  shift
+  magick "$@" +append -strip "$out"
+}
 
 # Battery rows: discharging / low-power run 100→0; charging runs 0→100 so the
 # row reads as filling up. $4 overrides the percent sequence.
 battrow() { # $1=outfile  $2=charging(true|false)  $3=lowpower-fill-colour("" if none)  $4=percents
   local out=$1 chg=$2 lpc=$3 percents=${4:-"$(seq 100 -10 0)"} i=0 f wn
   for p in $percents; do
-    if [ "$chg" = true ]; then f=$GREEN wn=false
-    elif [ "$p" -le 5 ]; then f=$RED wn=true
-    elif [ "$p" -le 20 ]; then f=$RED wn=false
-    elif [ -n "$lpc" ]; then f=$lpc wn=false
+    if [ "$chg" = true ]; then
+      f=$GREEN wn=false
+    elif [ "$p" -le 5 ]; then
+      f=$RED wn=true
+    elif [ "$p" -le 20 ]; then
+      f=$RED wn=false
+    elif [ -n "$lpc" ]; then
+      f=$lpc wn=false
     else f=$WHITE wn=false; fi
     "$BIN" battery --level "$(lvl "$p")" --charging "$chg" --warn "$wn" \
       --point-size "$BATT_PS" --scale 2 --weight thin --color "$WHITE" --fill-color "$f" \
       --out /tmp/_g.png >/dev/null
-    tile /tmp/_g.png "$A/_t$(printf '%03d' "$i").png"; i=$((i + 1))
+    tile /tmp/_g.png "$A/_t$(printf '%03d' "$i").png"
+    i=$((i + 1))
   done
-  row "$out" "$A"/_t*.png; rm -f "$A"/_t*.png
+  row "$out" "$A"/_t*.png
+  rm -f "$A"/_t*.png
 }
 battrow "$A/battery-discharging.png" false ""
 battrow "$A/battery-charging.png" true "" "$(seq 0 10 100)"
@@ -62,7 +72,8 @@ wifi wifi 0.5 3med
 wifi wifi 0.2 4low
 wifi wifi.exclamationmark "" 5disc
 wifi wifi.slash "" 6off
-row "$A/wifi.png" "$A"/_w*.png; rm -f "$A"/_w*.png
+row "$A/wifi.png" "$A"/_w*.png
+rm -f "$A"/_w*.png
 
 # Clock row: analog faces through the day, white face + red minute hand. Varied
 # minutes (not just :00) so the minute-hand precision the Nerd Font can't do reads.
@@ -74,9 +85,11 @@ clockrow() { # $1=outfile
     set -- $t
     "$BIN" clock --hour "$1" --minute "$2" --point-size "$CLOCK_PS" --scale 2 \
       --color "$WHITE" --minute-color "$RED" --out /tmp/_g.png >/dev/null
-    tile /tmp/_g.png "$A/_c$(printf '%03d' "$i").png"; i=$((i + 1))
+    tile /tmp/_g.png "$A/_c$(printf '%03d' "$i").png"
+    i=$((i + 1))
   done
-  row "$out" "$A"/_c*.png; rm -f "$A"/_c*.png
+  row "$out" "$A"/_c*.png
+  rm -f "$A"/_c*.png
 }
 clockrow "$A/clock.png"
 
@@ -96,6 +109,27 @@ sysicon speaker.fill 3vol0
 sysicon speaker.wave.1.fill 4vol1
 sysicon speaker.wave.2.fill 5vol2
 sysicon speaker.wave.3.fill 6vol3
-row "$A/system.png" "$A"/_s*.png; rm -f "$A"/_s*.png
+row "$A/system.png" "$A"/_s*.png
+rm -f "$A"/_s*.png
+
+# App-icon fallback row: the glyphs `app-icon` substitutes for faceless system
+# agents SketchyBar can't resolve to a real icon (SecurityAgent → touchid, …),
+# ending with the `questionmark` catch-all. Rendered exactly as the front_app
+# plugin draws them (single white --color), so the row matches the bar.
+appicon() { # $1=symbol  $2=name
+  "$BIN" symbol --symbol "$1" --point-size "$WIFI_PS" --scale 2 \
+    --color "$WHITE" --out /tmp/_g.png >/dev/null
+  tile /tmp/_g.png "$A/_a$2.png"
+}
+appicon touchid 1touchid
+appicon hand.raised.fill 2gatekeeper
+appicon person.badge.key.fill 3netauth
+appicon location.fill 4location
+appicon eject.fill 5eject
+appicon wifi 6wifiagent
+appicon airplayvideo 7airplay
+appicon questionmark 8unknown
+row "$A/app-icon.png" "$A"/_a*.png
+rm -f "$A"/_a*.png
 
 echo "Rendered gallery to $A"

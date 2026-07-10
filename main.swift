@@ -45,48 +45,46 @@ case "battery":
   // Continuous-fill battery for the discharging case.
   let flags = parseFlags(args[2...])
   guard let outPath = flags["out"] else { fail("battery: --out is required") }
-  let level = flags["level"].flatMap { Double($0) } ?? 1.0
-  let pointSize = flags["point-size"].flatMap { Double($0) } ?? 16.0
-  let scale = flags["scale"].flatMap { Double($0) } ?? 2.0
-  let charging = (flags["charging"] ?? "false") == "true"
-  let warn = (flags["warn"] ?? "false") == "true"
   // --color = outline (and overlay); --fill-color = the bar (defaults to --color).
-  let color = parseColor(flags["color"] ?? "0xffffffff")
+  let color = flags.color("color")
   let colors = flags["fill-color"].map { [color, parseColor($0)] } ?? [color]
   let ok = drawBattery(
-    level: level,
-    charging: charging,
-    warn: warn,
-    pointSize: CGFloat(pointSize),
-    scale: CGFloat(scale),
+    level: flags.double("level", 1),
+    charging: flags.bool("charging"),
+    warn: flags.bool("warn"),
+    pointSize: flags.cgFloat("point-size", 16),
+    scale: flags.cgFloat("scale", 2),
     weight: parseWeight(flags["weight"] ?? "regular"),
     colors: colors,
     outPath: outPath
   )
-  if !ok { exit(1) }
-  print((outPath as NSString).expandingTildeInPath)
+  emit(ok, outPath)
 
 case "clock":
   // Analog clock face at a given time (drawn directly, not an SF Symbol).
   let flags = parseFlags(args[2...])
   guard let outPath = flags["out"] else { fail("clock: --out is required") }
-  let hour = flags["hour"].flatMap { Int($0) } ?? 0
-  let minute = flags["minute"].flatMap { Int($0) } ?? 0
-  let pointSize = flags["point-size"].flatMap { Double($0) } ?? 18.0
-  let scale = flags["scale"].flatMap { Double($0) } ?? 2.0
   // --color = ring + hour hand; --minute-color = minute hand (defaults to --color).
-  let color = parseColor(flags["color"] ?? "0xffffffff")
+  let color = flags.color("color")
   let colors = flags["minute-color"].map { [color, parseColor($0)] } ?? [color]
   let ok = drawClock(
-    hour: hour,
-    minute: minute,
-    pointSize: CGFloat(pointSize),
-    scale: CGFloat(scale),
+    hour: flags.int("hour", 0),
+    minute: flags.int("minute", 0),
+    pointSize: flags.cgFloat("point-size", 18),
+    scale: flags.cgFloat("scale", 2),
     colors: colors,
     outPath: outPath
   )
-  if !ok { exit(1) }
-  print((outPath as NSString).expandingTildeInPath)
+  emit(ok, outPath)
+
+case "app-icon":
+  // Report whether SketchyBar's `app.<name>` lookup will find a real icon for
+  // the front app — "native" if so, else "unknown". A front_app plugin uses this
+  // to decide when to substitute its own glyph (SketchyBar draws a giant generic
+  // document for faceless agents like SecurityAgent). *Which* glyph to draw is
+  // the caller's policy, not ours — this only answers native-or-not.
+  let flags = parseFlags(args[2...])
+  print(runningAppIcon(name: flags["name"] ?? "") != nil ? "native" : "unknown")
 
 case "symbol":
   let flags = parseFlags(args[2...])
@@ -94,31 +92,25 @@ case "symbol":
   guard let outPath = flags["out"] else { fail("symbol: --out is required") }
 
   let variableValue = flags["value"].flatMap { Double($0) }
-  let pointSize = flags["point-size"].flatMap { Double($0) } ?? 16.0
-  let scale = flags["scale"].flatMap { Double($0) } ?? 2.0
-  let minWidth = flags["min-width"].flatMap { Double($0) } ?? 0.0
-  let xShift = flags["x-shift"].flatMap { Double($0) } ?? 0.0
-
   let colors: [NSColor]
   if let palette = flags["palette"], !palette.isEmpty {
     colors = palette.split(separator: ",").map { parseColor(String($0)) }
   } else {
-    colors = [parseColor(flags["color"] ?? "0xffffffff")]
+    colors = [flags.color("color")]
   }
 
   let ok = renderSymbol(
     name: name,
     variableValue: variableValue,
-    pointSize: CGFloat(pointSize),
-    scale: CGFloat(scale),
+    pointSize: flags.cgFloat("point-size", 16),
+    scale: flags.cgFloat("scale", 2),
     colors: colors,
-    minWidth: CGFloat(minWidth),
-    xShift: CGFloat(xShift),
+    minWidth: flags.cgFloat("min-width", 0),
+    xShift: flags.cgFloat("x-shift", 0),
     outPath: outPath
   )
-  if !ok { exit(1) }
   // Echo the path so callers can `let p = (sketchybar-icons symbol ...)`.
-  print((outPath as NSString).expandingTildeInPath)
+  emit(ok, outPath)
 
 default:
   fail("unknown subcommand '\(args[1])' (expected: symbol, wifi, battery, clock)")
