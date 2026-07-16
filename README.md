@@ -7,8 +7,8 @@ Screen Recording permission.
 ## Gallery
 
 <!-- Widths are proportional to each strip's tile count so every icon renders
-the same size (battery + clock rows have 11 tiles = 100%; wifi and system rows
-have 6 = ~54.5%; the app-icon row has 8 = ~72.7%). -->
+the same size (battery + clock rows have 11 tiles = 100%; the wifi row has
+6 = ~54.5%; the system and app-icon rows have 8 = ~72.7%). -->
 
 Battery discharging — continuous fill, red when low, warning triangle when
 critical:
@@ -36,11 +36,11 @@ hand):
 
 <img src="assets/clock.png" width="100%" alt="clock">
 
-Control Center + Volume — the `switch.2` toggles and the macOS `speaker.*`
-family
-(muted, then 0→3 waves):
+Control Center + Volume + Mic — the `switch.2` toggles, the macOS `speaker.*`
+family (muted, then 0→3 waves), and the `mic.*` mute indicator (live red — you're
+being heard — then muted white):
 
-<img src="assets/system.png" width="54.5%" alt="control center and volume">
+<img src="assets/system.png" width="72.7%" alt="control center, volume and mic">
 
 App-icon fallbacks — a selection of SF Symbols suited to the faceless system
 agents that have no real icon (Touch ID, Gatekeeper, share login, location,

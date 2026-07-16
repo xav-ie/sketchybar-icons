@@ -7,7 +7,7 @@ BIN="${1:?usage: render-icon-pack.sh <sketchybar-icons> <out-dir>}"
 OUT="${2:?usage: render-icon-pack.sh <sketchybar-icons> <out-dir>}"
 PS=24 # point size (retina, drawn at background.image.scale 0.5)
 
-mkdir -p "$OUT/battery" "$OUT/wifi"
+mkdir -p "$OUT/battery" "$OUT/wifi" "$OUT/zoom"
 
 lvl() { awk "BEGIN { printf \"%.2f\", $1 / 100 }"; }
 
@@ -58,5 +58,14 @@ wifi wifi 0.2 low
 wifi personalhotspot "" hotspot
 wifi wifi.exclamationmark "" disconnected
 wifi wifi.slash "" off
+
+# Zoom mute indicator: mic.fill live = red (you're being heard), mic.slash.fill
+# muted = white (safe/quiet). Colour passed as a two-entry palette (both the
+# same) so multi-layer glyphs render FLAT, not SF's two-tone hierarchical gray.
+# Matches ../dots sketchybar zoom_mute.nu.
+"$BIN" symbol --symbol mic.fill --point-size 16 --scale 2 --palette "$RED,$RED" \
+  --out "$OUT/zoom/unmuted.png"
+"$BIN" symbol --symbol mic.slash.fill --point-size 16 --scale 2 --palette "$WHITE,$WHITE" \
+  --out "$OUT/zoom/muted.png"
 
 echo "Rendered icon pack to $OUT"

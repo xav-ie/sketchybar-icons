@@ -110,9 +110,13 @@ clockrow "$A/clock.png"
 # Rendered all-white via `--palette` (multi-layer symbols, so a single
 # hierarchical colour would dim the toggles/waves) using the generic `symbol`
 # subcommand. Matches wifi's point size so they line up in a bar.
-sysicon() { # $1=symbol  $2=name
+sysicon() { # $1=symbol  $2=name  $3=palette colour for all layers (optional; default white)
+  local c="${3:-$WHITE}"
+  # All layers one colour so multi-layer glyphs (mic.slash, switch.2, speaker
+  # waves) render FLAT instead of SF's two-tone hierarchical look (which dims
+  # secondary layers to gray). Same trick the zoom_mute.nu plugin uses.
   "$BIN" symbol --symbol "$1" --point-size "$WIFI_PS" --scale 2 \
-    --palette "$WHITE,$WHITE,$WHITE,$WHITE" --out "$TMP/_g.png" >/dev/null
+    --palette "$c,$c,$c,$c" --out "$TMP/_g.png" >/dev/null
   tile "$TMP/_g.png" "$A/_s$2.png"
 }
 sysicon switch.2 1cc
@@ -121,6 +125,9 @@ sysicon speaker.fill 3vol0
 sysicon speaker.wave.1.fill 4vol1
 sysicon speaker.wave.2.fill 5vol2
 sysicon speaker.wave.3.fill 6vol3
+# Mic mute indicator (matches ../dots sketchybar zoom_mute.nu): live red, muted white.
+sysicon mic.fill 7miclive "$RED"
+sysicon mic.slash.fill 8micmute "$WHITE"
 row "$A/system.png" "$A"/_s*.png
 rm -f "$A"/_s*.png
 
