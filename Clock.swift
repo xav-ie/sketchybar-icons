@@ -28,14 +28,22 @@ func drawClock(
   pointSize: CGFloat,
   scale: CGFloat,
   colors: [NSColor],
+  minWidth: CGFloat = 0,
   outPath: String
 ) -> Bool {
   let primary = colors.first ?? .white
   let accent = colors.count > 1 ? colors[1] : primary
 
+  // The face diameter stays `pointSize` (so the clock keeps its size); the canvas
+  // is optionally widened to `minWidth` and the face centred in it. sketchybar
+  // left-aligns a background image within `icon.width`, so baking symmetric
+  // padding here is the only way to centre the glyph in a wider button — the same
+  // mechanism the `symbol` renderer uses (see Render.swift).
   let side = pointSize
-  let px = max(1, Int((side * scale).rounded()))
-  guard let rep = makeRGBARep(pxW: px, pxH: px, pointSize: NSSize(width: side, height: side))
+  let canvasW = max(side, minWidth)
+  let pxW = max(1, Int((canvasW * scale).rounded()))
+  let pxH = max(1, Int((side * scale).rounded()))
+  guard let rep = makeRGBARep(pxW: pxW, pxH: pxH, pointSize: NSSize(width: canvasW, height: side))
   else { return false }
 
   NSGraphicsContext.saveGraphicsState()
@@ -46,7 +54,7 @@ func drawClock(
   }
 
   let s = side
-  let cx = s / 2
+  let cx = canvasW / 2
   let cy = s / 2
   // Ring stroke ≈ the battery's `thin` SF Symbol outline (~0.048·pointSize) so the
   // two read at the same weight side by side.

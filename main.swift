@@ -73,6 +73,7 @@ case "clock":
     pointSize: flags.cgFloat("point-size", 18),
     scale: flags.cgFloat("scale", 2),
     colors: colors,
+    minWidth: flags.cgFloat("min-width", 0),
     outPath: outPath
   )
   emit(ok, outPath)
