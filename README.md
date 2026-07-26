@@ -81,8 +81,11 @@ sketchybar-icons battery --level 0..1 [--charging true|false]
 sketchybar-icons clock   --hour 0..23 --minute 0..59 [--minute-color 0xAARRGGBB]
                          --out <path>
 
-# prints: power=on associated=yes rssi=-56 fraction=0.83
+# prints: power=on associated=yes level=2 rssi=-56 fraction=0.83
 sketchybar-icons wifi
+
+# same line, streamed on every CoreWLAN change (runs until killed)
+sketchybar-icons wifi --watch
 
 # prints: native | unknown
 sketchybar-icons app-icon --name "<localized app name>"
@@ -95,7 +98,12 @@ sketchybar-icons app-icon --name "<localized app name>"
 - **`clock`** — analog face with real minute-hand precision, drawn to match SF's
   optical style. `--color` tints the ring + hour hand.
 - **`wifi`** — live Wi-Fi state from CoreWLAN using only RSSI/power (never the
-  SSID), so it needs no Location permission.
+  SSID), so it needs no Location permission. `level` is the arc count (0–3) the
+  `wifi` symbol can actually draw. `--watch` streams a line on every CoreWLAN
+  event — link up/down, power, signal — deduped on the displayed state, so a bar
+  can react instantly instead of polling or waiting on
+  `com.apple.system.config.network_change` (which configd posts only once the
+  whole network stack settles, and never for signal changes).
 - **`app-icon`** — see [App-icon fallbacks](#app-icon-fallbacks).
 
 ## App-icon fallbacks

@@ -6,7 +6,8 @@ import AppKit
 //                           [--point-size <n>] [--scale <n>]
 //                           [--color <0xAARRGGBB>] [--palette <hex,hex,...>]
 //                           --out <path>
-//   sketchybar-icons wifi        # prints live Wi-Fi state (CoreWLAN)
+//   sketchybar-icons wifi [--watch]  # live Wi-Fi state (CoreWLAN); --watch
+//                                    # streams a line on every change
 //   sketchybar-icons clock  --hour <0..23> --minute <0..59>
 //                           [--point-size <n>] [--scale <n>]
 //                           [--color <0xAARRGGBB>] [--minute-color <0xAARRGGBB>]
@@ -20,14 +21,23 @@ func fail(_ message: String) -> Never {
   exit(1)
 }
 
-/// Turn `["--symbol", "wifi", "--out", "/x"]` into `["--symbol": "wifi", ...]`.
+/// Turn `["--symbol", "wifi", "--out", "/x"]` into `["symbol": "wifi", ...]`.
+/// A flag followed by another flag (or nothing) is valueless and maps to "",
+/// so boolean flags like `--watch` don't eat the next flag's name.
 func parseFlags(_ args: ArraySlice<String>) -> [String: String] {
   var out: [String: String] = [:]
-  var it = args.makeIterator()
-  while let token = it.next() {
-    guard token.hasPrefix("--") else { continue }
-    let key = String(token.dropFirst(2))
-    out[key] = it.next() ?? ""
+  var i = args.startIndex
+  while i < args.endIndex {
+    defer { i = args.index(after: i) }
+    guard args[i].hasPrefix("--") else { continue }
+    let key = String(args[i].dropFirst(2))
+    let next = args.index(after: i)
+    if next < args.endIndex, !args[next].hasPrefix("--") {
+      out[key] = args[next]
+      i = next
+    } else {
+      out[key] = ""
+    }
   }
   return out
 }
@@ -39,6 +49,12 @@ guard args.count >= 2 else {
 
 switch args[1] {
 case "wifi":
+  // --watch streams a line per CoreWLAN event instead of exiting after one,
+  // optionally firing `sketchybar --trigger <event>` alongside each line.
+  let flags = parseFlags(args[2...])
+  if flags["watch"] != nil {
+    watchWifiState(trigger: flags["trigger"].flatMap { $0.isEmpty ? nil : $0 })
+  }
   printWifiState()
 
 case "battery":
