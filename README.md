@@ -101,9 +101,11 @@ sketchybar-icons app-icon --name "<localized app name>"
   SSID), so it needs no Location permission. `level` is the arc count (0–3) the
   `wifi` symbol can actually draw. `--watch` streams a line on every CoreWLAN
   event — link up/down, power, signal — deduped on the displayed state, so a bar
-  can react instantly instead of polling or waiting on
-  `com.apple.system.config.network_change` (which configd posts only once the
-  whole network stack settles, and never for signal changes).
+  can react instantly instead of polling. It also re-emits (undeduped) on
+  configd's `com.apple.system.config.network_change`, which lands once routes
+  and flags like `IsExpensive` settle — the only signal for personal-hotspot
+  and tether changes. That's a darwin notify(3) key, which sketchybar's
+  `--add event` can't receive.
 - **`app-icon`** — see [App-icon fallbacks](#app-icon-fallbacks).
 
 ## App-icon fallbacks

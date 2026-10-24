@@ -1,5 +1,6 @@
 import CoreWLAN
 import Foundation
+import notify
 
 /// Live Wi-Fi state read via CoreWLAN. Only signal metrics are used — never the
 /// SSID/BSSID — so this needs **no** Location Services permission (reading the
@@ -59,10 +60,13 @@ func printWifiState() {
 }
 
 /// Streams a state line on every CoreWLAN event, for a daemon to turn into a
-/// `sketchybar --trigger`. This is the whole point of `--watch`:
-/// `com.apple.system.config.network_change` only fires once configd has settled
-/// the whole network stack (seconds late, and never for signal strength), while
-/// these events are the same ones Control Center reacts to — instantly.
+/// `sketchybar --trigger`. CoreWLAN events are the same ones Control Center
+/// reacts to — instantly. configd's `com.apple.system.config.network_change`
+/// is watched too: it lands seconds later, once routes and per-network flags
+/// (e.g. `IsExpensive`, which marks a personal hotspot) have settled, and is
+/// the only signal for hotspot/tether changes CoreWLAN can't see. It's a
+/// darwin notify(3) key, not an NSDistributedNotification, so sketchybar's own
+/// `--add event` can't subscribe to it.
 final class WifiWatcher: NSObject, CWEventDelegate {
   /// `sketchybar --trigger <event>` on each change, when `--trigger` was given.
   let event: String?
@@ -72,16 +76,28 @@ final class WifiWatcher: NSObject, CWEventDelegate {
 
   init(event: String?) { self.event = event }
 
-  func emit() {
+  /// Pending network_change trigger; configd posts these in bursts.
+  private var settle: DispatchWorkItem?
+
+  /// `force` triggers even when the Wi-Fi state is unchanged, for consumers
+  /// whose display depends on network state beyond CoreWLAN's.
+  func emit(force: Bool = false) {
     let s = readWifiState()
     let key = "\(s.powerOn)\(s.associated)\(s.level)"
-    guard key != last else { return }
+    guard force || key != last else { return }
     last = key
     print(wifiStateLine(s))
     guard let event else { return }
     // Resolved off PATH so the caller (a launchd agent) owns which sketchybar.
     try? Process.run(
       URL(fileURLWithPath: "/usr/bin/env"), arguments: ["sketchybar", "--trigger", event])
+  }
+
+  func networkDidChange() {
+    settle?.cancel()
+    let work = DispatchWorkItem { [weak self] in self?.emit(force: true) }
+    settle = work
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
   }
 
   func linkDidChangeForWiFiInterface(withName _: String) { emit() }
@@ -98,6 +114,10 @@ func watchWifiState(trigger event: String?) -> Never {
   client.delegate = watcher
   for event in [CWEventType.linkDidChange, .powerDidChange, .linkQualityDidChange] {
     try? client.startMonitoringEvent(with: event)
+  }
+  var token: Int32 = 0
+  notify_register_dispatch("com.apple.system.config.network_change", &token, .main) { _ in
+    watcher.networkDidChange()
   }
   watcher.emit()  // prime the bar at startup
   RunLoop.current.run()
