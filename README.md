@@ -81,11 +81,16 @@ sketchybar-icons battery --level 0..1 [--charging true|false]
 sketchybar-icons clock   --hour 0..23 --minute 0..59 [--minute-color 0xAARRGGBB]
                          --out <path>
 
-# prints: power=on associated=yes level=2 rssi=-56 fraction=0.83
+# prints: power=on associated=yes ip=yes internet=online level=2 rssi=-56 fraction=0.83
+# internet: none | online | captive | offline (macOS's own verdict)
 sketchybar-icons wifi
 
-# same line, streamed on every CoreWLAN change (runs until killed)
-sketchybar-icons wifi --watch
+# same line, streamed on every change (runs until killed); --trigger <event>
+# also runs `sketchybar --trigger <event> WIFI_STATE=<line>`
+sketchybar-icons wifi --watch [--trigger <event>]
+
+# ask a running --watch to re-send its line
+sketchybar-icons wifi --refresh
 
 # prints: native | unknown
 sketchybar-icons app-icon --name "<localized app name>"
@@ -106,6 +111,18 @@ sketchybar-icons app-icon --name "<localized app name>"
   and flags like `IsExpensive` settle — the only signal for personal-hotspot
   and tether changes. That's a darwin notify(3) key, which sketchybar's
   `--add event` can't receive.
+
+  `internet` is macOS's own verdict, read rather than probed, so the bar sends
+  no traffic. It combines three signals, all pushed to `--watch`:
+  symptomsd's broken-backhaul state via CoreWiFi (private, resolved at
+  runtime) for dead uplinks and dropped or refused traffic; configd's captive
+  `Stage` (`UIRequired`/`Websheet`) for a portal waiting for login; and the
+  system path staying `unsatisfied`, which is what apps see as offline (this
+  one needs history, so only `--watch` reports it). The
+  menu-bar icon misses most of these: its captive check assumes online when
+  its probe times out or DNS fails. Recovery from a broken backhaul lags until
+  macOS sees connections succeed again.
+
 - **`app-icon`** — see [App-icon fallbacks](#app-icon-fallbacks).
 
 ## App-icon fallbacks

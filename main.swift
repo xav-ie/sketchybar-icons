@@ -1,4 +1,5 @@
 import AppKit
+import notify
 
 // sketchybar-icons — tiny helper for the sketchybar bar.
 //
@@ -6,8 +7,10 @@ import AppKit
 //                           [--point-size <n>] [--scale <n>]
 //                           [--color <0xAARRGGBB>] [--palette <hex,hex,...>]
 //                           --out <path>
-//   sketchybar-icons wifi [--watch]  # live Wi-Fi state (CoreWLAN); --watch
-//                                    # streams a line on every change
+//   sketchybar-icons wifi [--watch [--trigger <event>]] [--refresh]
+//                    # live Wi-Fi state (CoreWLAN) + macOS's internet verdict;
+//                    # --watch streams a line on every change, --refresh asks
+//                    # a running --watch to re-send its line
 //   sketchybar-icons clock  --hour <0..23> --minute <0..59>
 //                           [--point-size <n>] [--scale <n>]
 //                           [--color <0xAARRGGBB>] [--minute-color <0xAARRGGBB>]
@@ -52,6 +55,10 @@ case "wifi":
   // --watch streams a line per CoreWLAN event instead of exiting after one,
   // optionally firing `sketchybar --trigger <event>` alongside each line.
   let flags = parseFlags(args[2...])
+  if flags["refresh"] != nil {
+    notify_post(refreshNotification)
+    exit(0)
+  }
   if flags["watch"] != nil {
     watchWifiState(trigger: flags["trigger"].flatMap { $0.isEmpty ? nil : $0 })
   }
