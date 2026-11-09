@@ -28,7 +28,7 @@
       # It deliberately does NOT byte-compare against the committed assets/: SF
       # Symbol glyphs vary by macOS version, so a strict diff would false-positive
       # when run on a different macOS than CI. Keeping assets/ canonical is the
-      # auto-commit workflow's job (it renders on the pinned macos-15 runner).
+      # auto-commit workflow's job (it renders on the pinned macos-26 runner).
       #
       # `__noChroot` because SF Symbol rendering needs the host's system fonts,
       # which are unreachable in the sandbox.
