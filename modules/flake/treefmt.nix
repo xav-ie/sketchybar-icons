@@ -5,7 +5,7 @@
   imports = [ inputs.treefmt-nix.flakeModule ];
 
   perSystem =
-    { system, ... }:
+    { pkgs, ... }:
     {
       treefmt = {
         # Custom Nushell formatter module (treefmt-nix has no nufmt yet).
@@ -33,7 +33,8 @@
           swift-format.enable = true; # *.swift
           nufmt = {
             enable = true; # *.nu (examples/)
-            package = inputs.nufmt.packages.${system}.default;
+            # nixpkgs' build, so it comes prebuilt from cache.nixos.org.
+            package = pkgs.nufmt;
           };
         };
 

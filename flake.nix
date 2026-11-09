@@ -7,7 +7,6 @@
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
-    nufmt.url = "github:nushell/nufmt";
   };
 
   outputs =
