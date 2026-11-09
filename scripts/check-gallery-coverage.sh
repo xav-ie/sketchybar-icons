@@ -5,12 +5,13 @@
 set -euo pipefail
 cd "${1:-.}"
 
-# Gallery tiles: the symbol argument of each wifi/sysicon/appicon call.
-gallery=$(awk '$1 ~ /^(wifi|sysicon|appicon)$/ && NF >= 2 { print $2 }' scripts/render-gallery.sh | sort -u)
+# Gallery tiles: the symbol argument of each wifi/sysicon/appicon call, plus a
+# wifi tile's badge (its fifth argument).
+gallery=$(awk '$1 ~ /^(wifi|sysicon|appicon)$/ && NF >= 2 { print $2 } $1 == "wifi" && NF >= 6 { print $6 }' scripts/render-gallery.sh | tr -d '"' | sort -u)
 
-# Drawn by the examples: `sym: "..."` specs, and front_app's fallback table.
+# Drawn by the examples: `sym:`/`badge:` specs, and front_app's fallback table.
 used=$({
-  grep -ohE 'sym: "[^"]+"' examples/*.nu | sed -E 's/sym: "(.*)"/\1/'
+  grep -ohE '(sym|badge): "[^"]+"' examples/*.nu | sed -E 's/(sym|badge): "(.*)"/\2/'
   sed -n '/^const FALLBACK_SYMBOLS = {/,/^}/p' examples/front_app.nu | awk 'NF >= 2 && $1 ~ /:$/ { print $2 }'
 } | sort -u)
 
