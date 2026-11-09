@@ -3,7 +3,7 @@ import notify
 
 // sketchybar-icons — tiny helper for the sketchybar bar.
 //
-//   sketchybar-icons symbol --symbol <name> [--value <0..1>]
+//   sketchybar-icons symbol --symbol <name> [--badge <name>] [--value <0..1>]
 //                           [--point-size <n>] [--scale <n>]
 //                           [--color <0xAARRGGBB>] [--palette <hex,hex,...>]
 //                           --out <path>
@@ -126,6 +126,7 @@ case "symbol":
   let ok = renderSymbol(
     name: name,
     variableValue: variableValue,
+    badge: flags["badge"],
     pointSize: flags.cgFloat("point-size", 16),
     scale: flags.cgFloat("scale", 2),
     colors: colors,
