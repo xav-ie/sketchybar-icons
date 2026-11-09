@@ -11,6 +11,10 @@ import notify
 //                    # live Wi-Fi state (CoreWLAN) + macOS's internet verdict;
 //                    # --watch streams a line on every change, --refresh asks
 //                    # a running --watch to re-send its line
+//   sketchybar-icons animate --item <name> --frames <png,png,...>
+//                           [--interval <s>] [--for <s>]
+//                    # cycle an item's icon image through frames, then settle
+//                    # on the first and exit after --for seconds
 //   sketchybar-icons clock  --hour <0..23> --minute <0..59>
 //                           [--point-size <n>] [--scale <n>]
 //                           [--color <0xAARRGGBB>] [--minute-color <0xAARRGGBB>]
@@ -101,6 +105,15 @@ case "clock":
   )
   emit(ok, outPath)
 
+case "animate":
+  let flags = parseFlags(args[2...])
+  guard let item = flags["item"], !item.isEmpty else { fail("animate: --item is required") }
+  let frames = (flags["frames"] ?? "").split(separator: ",").map(String.init)
+  guard !frames.isEmpty else { fail("animate: --frames is required") }
+  animateItem(
+    item, frames: frames, interval: flags.double("interval", 0.4),
+    duration: flags.double("for", 20))
+
 case "app-icon":
   // Report whether SketchyBar's `app.<name>` lookup will find a real icon for
   // the front app — "native" if so, else "unknown". A front_app plugin uses this
@@ -138,5 +151,5 @@ case "symbol":
   emit(ok, outPath)
 
 default:
-  fail("unknown subcommand '\(args[1])' (expected: symbol, wifi, battery, clock)")
+  fail("unknown subcommand '\(args[1])' (expected: symbol, wifi, battery, clock, animate)")
 }

@@ -96,6 +96,9 @@ sketchybar-icons wifi --refresh
 
 # prints: native | unknown
 sketchybar-icons app-icon --name "<localized app name>"
+
+# cycle an item's icon image through frames, then settle on the first and exit
+sketchybar-icons animate --item <name> --frames <png,png,...> [--interval 0.4] [--for 20]
 ```
 
 - **`symbol`** — any SF Symbol → PNG. `--value` fills variable symbols (e.g.
@@ -129,6 +132,11 @@ sketchybar-icons app-icon --name "<localized app name>"
   its probe times out or DNS fails. Recovery from a broken backhaul lags until
   macOS sees connections succeed again.
 
+- **`animate`** — swaps a sketchybar item's `icon.background.image` through
+  `--frames` every `--interval` seconds, then settles on the first frame and
+  exits after `--for` seconds. For short-lived states like joining a network:
+  start it on entering the state and stop it (SIGTERM, handled between frames)
+  on leaving; the time limit keeps a stuck state from waking the Mac.
 - **`app-icon`** — see [App-icon fallbacks](#app-icon-fallbacks).
 
 ## App-icon fallbacks
