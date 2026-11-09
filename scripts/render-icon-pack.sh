@@ -47,16 +47,21 @@ for p in $(seq 0 5 100); do
     --out "$OUT/battery/lowpower-$(printf '%03d' "$p").png"
 done
 
-# Wi-Fi: signal levels, disconnected, off.
+# Wi-Fi: signal levels, hotspot (connected, connecting), connecting, no
+# internet, captive portal, off. $4 overrides the white, e.g. to dim a glyph
+# that has no variable value.
 wifi() { "$BIN" symbol --symbol "$1" ${2:+--value "$2"} --point-size 18 --scale 2 \
-  --min-width 26 --x-shift 0.75 --color 0xffffffff --out "$OUT/wifi/$3.png"; }
+  --min-width 26 --x-shift 0.75 --color "${4:-0xffffffff}" --out "$OUT/wifi/$3.png"; }
 # The wifi glyph has 3 arc levels; values must land in distinct variableValue
 # bands (0.2 / 0.5 / 1.0) or adjacent levels render identically.
 wifi wifi 1.0 full
 wifi wifi 0.5 medium
 wifi wifi 0.2 low
 wifi personalhotspot "" hotspot
-wifi wifi.exclamationmark "" disconnected
+wifi personalhotspot "" hotspot-connecting 0x4dffffff
+wifi wifi 0.0 connecting
+wifi wifi.exclamationmark "" no-internet
+wifi wifi.badge.lock "" captive
 wifi wifi.slash "" off
 
 # Zoom mute indicator: mic.fill live = red (you're being heard), mic.slash.fill
