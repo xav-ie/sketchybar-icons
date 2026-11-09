@@ -28,7 +28,7 @@
       # It deliberately does NOT byte-compare against the committed assets/: SF
       # Symbol glyphs vary by macOS version, so a strict diff would false-positive
       # when run on a different macOS than CI. Keeping assets/ canonical is the
-      # auto-commit workflow's job (it renders on the pinned macos-14 runner).
+      # auto-commit workflow's job (it renders on the pinned macos-15 runner).
       #
       # `__noChroot` because SF Symbol rendering needs the host's system fonts,
       # which are unreachable in the sandbox.
@@ -55,5 +55,12 @@
             echo "Gallery renders cleanly (7 montages)."
             touch "$out"
           '';
+
+      # Every SF Symbol the example plugins draw must appear in the gallery, so
+      # a new state can't ship without its picture.
+      checks.gallery-coverage = pkgs.runCommand "gallery-coverage" { } ''
+        bash ${../../scripts/check-gallery-coverage.sh} ${../..}
+        touch "$out"
+      '';
     };
 }
