@@ -40,7 +40,8 @@ def signal-value [fraction: float] {
   }
 }
 
-# Parse `power=on associated=yes rssi=-56 fraction=0.83` into a record.
+# Parse `power=on associated=yes ip=yes internet=online level=3 rssi=-56
+# fraction=0.83` into a record.
 def read-wifi [] {
   sketchybar-icons wifi
   | str trim
@@ -66,22 +67,35 @@ def is-hotspot [] {
 def render [] {
   let color = "0xffffffff"
 
-  # Hotspot takes priority (works even if Wi-Fi is off and it's USB/BT tethered).
-  let spec = if (is-hotspot) {
+  let state = (read-wifi)
+  let associated = ($state.associated? | default "no") == "yes"
+  # Problems on a joined network come first, so a dead hotspot doesn't show the
+  # working-hotspot glyph.
+  let spec = if $associated and ($state.ip? | default "no") != "yes" {
+    # Still connecting: joined, but DHCP hasn't produced an address. The plain
+    # glyph at value 0 dims its arcs, as Control Center does.
+    {sym: "wifi", value: 0.0, key: "connecting"}
+  } else if $associated and $state.internet? == "captive" {
+    # A captive portal is waiting for login.
+    {sym: "wifi.badge.lock", value: null, key: "captive"}
+  } else if $associated and $state.internet? == "offline" {
+    # Joined with an address, but macOS finds connections don't get past the
+    # access point.
+    {sym: "wifi.exclamationmark", value: null, key: "nointernet"}
+  } else if (is-hotspot) {
+    # Works even if Wi-Fi is off and it's USB/BT tethered.
     {sym: "personalhotspot", value: null, key: "hotspot"}
+  } else if ($state.power? | default "on") != "on" {
+    {sym: "wifi.slash", value: null, key: "off"}
+  } else if not $associated {
+    # Radio on but not joined yet: macOS is still trying.
+    {sym: "wifi", value: 0.0, key: "connecting"}
   } else {
-    let state = (read-wifi)
-    if ($state.power? | default "on") != "on" {
-      {sym: "wifi.slash", value: null, key: "off"}
-    } else if ($state.associated? | default "no") != "yes" {
-      {sym: "wifi.exclamationmark", value: null, key: "noassoc"}
-    } else {
-      let v = signal-value ($state.fraction | into float)
-      {
-        sym: "wifi"
-        value: $v
-        key: $"on-($v)"
-      }
+    let v = signal-value ($state.fraction | into float)
+    {
+      sym: "wifi"
+      value: $v
+      key: $"on-($v)"
     }
   }
 
