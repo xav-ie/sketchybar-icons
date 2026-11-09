@@ -7,8 +7,8 @@ Screen Recording permission.
 ## Gallery
 
 <!-- Widths are proportional to each strip's tile count so every icon renders
-the same size (battery + clock rows have 11 tiles = 100%; the wifi row has
-6 = ~54.5%; the system and app-icon rows have 8 = ~72.7%). -->
+the same size (battery + clock rows have 11 tiles = 100%; the wifi row has 9 =
+~81.8%; the system and app-icon rows have 8 = ~72.7%). -->
 
 Battery discharging — continuous fill, red when low, warning triangle when
 critical:
@@ -26,10 +26,11 @@ critical):
 <img src="assets/battery-lowpower.png" width="100%" alt="battery low power
   mode">
 
-Wi-Fi — Personal Hotspot, then arcs filling by live RSSI, disconnected, and
-off:
+Wi-Fi — Personal Hotspot (connected, then connecting), arcs filling by live
+RSSI, connecting (dimmed arcs), no internet, captive portal waiting for login,
+and off:
 
-<img src="assets/wifi.png" width="54.5%" alt="wifi">
+<img src="assets/wifi.png" width="81.8%" alt="wifi">
 
 Clock — a hand-drawn analog face with real minute-hand precision (red minute
 hand):

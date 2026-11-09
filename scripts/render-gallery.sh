@@ -72,18 +72,24 @@ battrow "$A/battery-discharging.png" false ""
 battrow "$A/battery-charging.png" true "" "$(seq 0 10 100)"
 battrow "$A/battery-lowpower.png" false "$YELLOW"
 
-# Wi-Fi row: signal levels, hotspot, disconnected, off.
-wifi() { # $1=symbol  $2=value("" for none)  $3=name
+# Wi-Fi row: hotspot, hotspot connecting, signal levels, connecting (dimmed
+# arcs), no internet, captive portal, off. Glyphs without a variable value are
+# dimmed with the 30% white Apple draws unfilled arcs in.
+DIM=0x4dffffff
+wifi() { # $1=symbol  $2=value("" for none)  $3=name  $4=colour (default white)
   "$BIN" symbol --symbol "$1" ${2:+--value "$2"} --point-size "$WIFI_PS" --scale 2 \
-    --min-width "$WIFI_MINW" --x-shift "$WIFI_XSHIFT" --color "$WHITE" --out "$TMP/_g.png" >/dev/null
+    --min-width "$WIFI_MINW" --x-shift "$WIFI_XSHIFT" --color "${4:-$WHITE}" --out "$TMP/_g.png" >/dev/null
   tile "$TMP/_g.png" "$A/_w$3.png"
 }
 wifi personalhotspot "" 1hotspot
-wifi wifi 1.0 2full
-wifi wifi 0.5 3med
-wifi wifi 0.2 4low
-wifi wifi.exclamationmark "" 5disc
-wifi wifi.slash "" 6off
+wifi personalhotspot "" 2hotspotconnecting "$DIM"
+wifi wifi 1.0 3full
+wifi wifi 0.5 4med
+wifi wifi 0.2 5low
+wifi wifi 0.0 6connecting
+wifi wifi.exclamationmark "" 7nointernet
+wifi wifi.badge.lock "" 8captive
+wifi wifi.slash "" 9off
 row "$A/wifi.png" "$A"/_w*.png
 rm -f "$A"/_w*.png
 
