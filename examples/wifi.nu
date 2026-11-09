@@ -76,8 +76,13 @@ def render [] {
     # glyph at value 0 dims its arcs, as Control Center does.
     {sym: "wifi", value: 0.0, key: "connecting"}
   } else if $associated and $state.internet? == "captive" {
-    # A captive portal is waiting for login.
-    {sym: "wifi.badge.lock", value: null, key: "captive"}
+    # A captive portal is waiting for login: full arcs with a lock badge.
+    {
+      sym: "wifi"
+      value: 1.0
+      badge: "lock.fill"
+      key: "captive"
+    }
   } else if $associated and $state.internet? == "offline" {
     # Joined with an address, but macOS finds connections don't get past the
     # access point.
@@ -101,11 +106,9 @@ def render [] {
 
   let out = $"($CACHE_DIR)/wifi-($spec.key)-($POINT_SIZE)-w($MIN_WIDTH)-x($X_SHIFT).png"
   if not ($out | path exists) {
-    if $spec.value == null {
-      sketchybar-icons symbol --symbol $spec.sym --point-size $POINT_SIZE --scale 2 --min-width $MIN_WIDTH --x-shift $X_SHIFT --color $color --out $out
-    } else {
-      sketchybar-icons symbol --symbol $spec.sym --value $spec.value --point-size $POINT_SIZE --scale 2 --min-width $MIN_WIDTH --x-shift $X_SHIFT --color $color --out $out
-    }
+    let value = if $spec.value != null { [--value $spec.value] } else { [] }
+    let badge = if $spec.badge? != null { [--badge $spec.badge] } else { [] }
+    sketchybar-icons symbol --symbol $spec.sym ...$value ...$badge --point-size $POINT_SIZE --scale 2 --min-width $MIN_WIDTH --x-shift $X_SHIFT --color $color --out $out
   }
   $out
 }

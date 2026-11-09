@@ -49,8 +49,8 @@ done
 
 # Wi-Fi: signal levels, hotspot (connected, connecting), connecting, no
 # internet, captive portal, off. $4 overrides the white, e.g. to dim a glyph
-# that has no variable value.
-wifi() { "$BIN" symbol --symbol "$1" ${2:+--value "$2"} --point-size 18 --scale 2 \
+# that has no variable value; $5 adds a badge.
+wifi() { "$BIN" symbol --symbol "$1" ${2:+--value "$2"} ${5:+--badge "$5"} --point-size 18 --scale 2 \
   --min-width 26 --x-shift 0.75 --color "${4:-0xffffffff}" --out "$OUT/wifi/$3.png"; }
 # The wifi glyph has 3 arc levels; values must land in distinct variableValue
 # bands (0.2 / 0.5 / 1.0) or adjacent levels render identically.
@@ -61,7 +61,7 @@ wifi personalhotspot "" hotspot
 wifi personalhotspot "" hotspot-connecting 0x4dffffff
 wifi wifi 0.0 connecting
 wifi wifi.exclamationmark "" no-internet
-wifi wifi.badge.lock "" captive
+wifi wifi 1.0 captive "" lock.fill
 wifi wifi.slash "" off
 
 # Zoom mute indicator: mic.fill live = red (you're being heard), mic.slash.fill

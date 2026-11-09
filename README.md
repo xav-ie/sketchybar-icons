@@ -72,8 +72,9 @@ print a line). Common flags: `--point-size N`, `--scale N`, `--color
 0xAARRGGBB`.
 
 ```
-sketchybar-icons symbol  --symbol <name> [--value 0..1] [--min-width pts]
-                         [--x-shift pts] [--palette h,h,...] --out <path>
+sketchybar-icons symbol  --symbol <name> [--badge <name>] [--value 0..1]
+                         [--min-width pts] [--x-shift pts] [--palette h,h,...]
+                         --out <path>
 
 sketchybar-icons battery --level 0..1 [--charging true|false]
                          [--warn true|false] [--weight thin|regular|...]
@@ -99,6 +100,10 @@ sketchybar-icons app-icon --name "<localized app name>"
 
 - **`symbol`** — any SF Symbol → PNG. `--value` fills variable symbols (e.g.
   `wifi` arcs by signal); `--palette` colors layers instead of `--color`.
+  `--badge` composes a second symbol into the bottom-right corner the way SF
+  Symbols' own `*.badge.*` variants look (base at half opacity, badge cut out
+  with a gap), from glyphs every supported macOS has — e.g. `wifi` + `lock.fill`
+  for a captive portal, matching macOS 26's `wifi.badge.lock`.
 - **`battery`** — macOS-style battery with a proportional fill (SF only has
   0/25/50/75/100). `--charging` adds a bolt, `--warn` a warning triangle.
 - **`clock`** — analog face with real minute-hand precision, drawn to match SF's
