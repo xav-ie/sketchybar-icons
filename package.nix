@@ -8,7 +8,7 @@
 # CoreWLAN auto-link on `import` under swiftc on darwin.
 stdenv.mkDerivation {
   pname = "sketchybar-icons";
-  version = "0.2.0";
+  version = "0.3.0";
   src = ./.;
   nativeBuildInputs = [ swift ];
   buildPhase = ''
