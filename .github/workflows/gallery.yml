@@ -9,7 +9,10 @@ name: Gallery
 # Rendering is shared: this runs the same `nix run .#render-gallery` flake app a
 # dev runs locally (and that `checks.gallery` validates), not a bespoke command.
 #
-# No loop: this only triggers on the rendering paths below, and the commit it
+# It also runs weekly (and by hand), on the newest macOS GitHub offers, so a new
+# macOS's redrawn symbols reach the gallery without a code change.
+#
+# No loop: a push only triggers on the rendering paths below, and the commit it
 # makes touches assets/ (not in `paths`), so the pushed commit doesn't re-trigger.
 
 on:
@@ -20,13 +23,16 @@ on:
       - "scripts/render-gallery.sh"
       - "modules/flake/packages.nix"
       - ".github/workflows/gallery.yml"
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   gallery:
-    runs-on: macos-26
+    runs-on: macos-latest # the newest macOS, whose symbols the bar draws
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
